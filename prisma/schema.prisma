@@ -1,0 +1,286 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            Int    @id @default(autoincrement()) 
+  email         String
+  emailVerified Boolean   @default(false)
+  image         String?   @db.Text
+  password      String?   @db.Text
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @default(now()) @updatedAt
+  role          String    @default("company") @db.VarChar(50)
+
+  companies     Company[]
+
+  @@unique([email])
+  @@map("users")
+}
+
+
+
+model Company {
+  id          Int     @id @default(autoincrement())
+  title       String  @db.VarChar(191)
+  address     String  @db.VarChar(191)
+  city        String  @db.VarChar(191)
+  country     String  @db.VarChar(191)
+  email       String  @unique @db.VarChar(191)
+  contactName String  @map("contact_name") @db.VarChar(191)
+  contactPhone String @map("contact_phone") @db.VarChar(191)
+  taxpayerID  String  @map("taxpayer_id") @db.VarChar(191)
+  zipCode     String  @map("zip_code") @db.VarChar(20)
+  userId     Int  @map("user_id") @unique
+
+
+
+  // Relations
+  positions  Position[]
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  @@map("companies")
+}
+
+model Position {
+  id             Int             @id @default(autoincrement())
+  title          String          @db.VarChar(191)
+  jobDescription String          @map("job_description") @db.Text
+  status         PositionStatus  @default(ACTIVE)
+  companyId      Int             @map("company_id")
+
+  // Relations
+  company            Company             @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  applicantPositions ApplicantPosition[]
+
+  @@index([companyId])
+  @@map("positions")
+}
+
+model Applicant {
+  id                Int                      @id @default(autoincrement())
+  firstName         String                   @map("first_name") @db.VarChar(191)
+  lastName          String                   @map("last_name") @db.VarChar(191)
+  gender            Gender
+  age               Int
+  birthDate         DateTime                 @map("birth_date")
+  phone             String                   @db.VarChar(191)
+  email             String                   @unique @db.VarChar(191)
+  startWorkingDate  DateTime                 @map("start_working_date") 
+  prefferedLocation String                   @map("preffered_location") @db.VarChar(191)
+
+  // Relations
+  documents       ApplicantDocument[]
+  educations      ApplicantEducation[]
+  positions       ApplicantPosition[]
+  trainings       ApplicantTraining[]
+  workExperiences ApplicantWorkExperience[]
+  addresses       ApplicantAddress[]
+  socialMedia     SocialMedia[]
+
+  @@map("applicants")
+}
+
+model ApplicantDocument {
+  id           Int          @id @default(autoincrement())
+  applicantId  Int          @map("applicant_id")
+  documentType DocumentType @map("document_type")
+  description  String       @db.VarChar(191)
+  filePath     String       @map("file_path") @db.VarChar(191)
+
+  // Relations
+  applicant Applicant @relation(fields: [applicantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([applicantId])
+  @@map("applicant_documents")
+}
+
+model ApplicantEducation {
+  id               Int    @id @default(autoincrement())
+  applicantId      Int    @map("applicant_id")
+  educationlevelId Int    @map("educationlevel_id")
+  institution      String @db.VarChar(191)
+  field            String @db.VarChar(191)
+  graduationYear   Int    @map("graduation_year")
+  gpa              Float
+
+  // Relations
+  applicant      Applicant      @relation(fields: [applicantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  educationLevel EducationLevel @relation(fields: [educationlevelId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([applicantId])
+  @@index([educationlevelId])
+  @@map("applicant_educations")
+}
+
+model ApplicantPosition {
+  id          Int               @id @default(autoincrement())
+  applicantId Int               @map("applicant_id")
+  positionId  Int               @map("position_id")
+  status      ApplicationStatus @default(PENDING)
+  appliedAt   DateTime          @default(now()) @map("applied_at")
+
+  // Relations
+  applicant Applicant @relation(fields: [applicantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  position  Position  @relation(fields: [positionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([applicantId, positionId])
+  @@index([positionId])
+  @@map("applicant_positions")
+}
+
+model ApplicantTraining {
+  id           Int    @id @default(autoincrement())
+  applicantId  Int    @map("applicant_id")
+  title        String @db.VarChar(191)
+  description  String @db.Text
+  trainingYear Int    @map("training_year")
+
+  // Relations
+  applicant Applicant @relation(fields: [applicantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([applicantId])
+  @@map("applicant_trainings")
+}
+
+model ApplicantWorkExperience {
+  id              Int       @id @default(autoincrement())
+  applicantId     Int       @map("applicant_id")
+  company         String    @db.VarChar(191)
+  position        String    @db.VarChar(191)
+  startDate       DateTime  @map("start_date")
+  endDate         DateTime? @map("end_date")
+  description     String    @db.Text
+  currentPosition Boolean   @default(false) @map("current_position")
+
+  // Relations
+  applicant Applicant @relation(fields: [applicantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([applicantId])
+  @@map("applicant_work_experiences")
+}
+
+model ApplicantAddress {
+  id          Int      @id @default(autoincrement())
+  address     String   @db.VarChar(191)
+  applicantId Int      @map("applicant_id")
+  districtId  Int      @map("district_id")
+
+
+  // Relations
+  applicant Applicant @relation(fields: [applicantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  district  District  @relation(fields: [districtId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("applicant_address")
+}
+
+model ApplicantsJobType {
+  id        Int      @id @default(autoincrement())
+  applicantId Int    @map("applicant_id")
+  jobTypeId Int      @map("job_type_id")
+
+
+  // Relations
+  jobType   JobType   @relation(fields: [jobTypeId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("applicants_job_types")
+}
+
+model JobType {
+  id        Int        @id @default(autoincrement())
+  title     String     @db.VarChar(191)
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+
+  applicantsJobTypes ApplicantsJobType[]
+
+  @@map("job_types")
+}
+
+model SocialMedia {
+  id        Int      @id @default(autoincrement())
+  provider  String   @db.VarChar(191)
+  sessionId String   @db.Text
+  applicantId Int    @map("applicant_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  applicant Applicant @relation(fields: [applicantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("social_media")
+}
+
+model EducationLevel {
+  id        Int      @id @default(autoincrement())
+  title     String   @db.VarChar(191)
+  code      String   @unique @db.VarChar(191)
+  rank      Int
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  applicantEducations ApplicantEducation[]
+
+  @@map("educationlevel")
+}
+
+
+model District {
+  id        Int       @id @default(autoincrement())
+  title     String    @db.VarChar(191)
+  provinceId Int      @map("province_id")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  province  Province         @relation(fields: [provinceId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  addresses ApplicantAddress[]
+
+  @@map("districts")
+} 
+
+model Province {
+  id        Int       @id @default(autoincrement())
+  title     String    @db.VarChar(191)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  districts District[]
+
+  @@map("provinces")
+}
+
+// Enums
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum PositionStatus {
+  ACTIVE
+  PENDING
+  CLOSED
+}
+
+enum DocumentType {
+  RESUME
+  COVER_LETTER
+  TRANSCRIPT
+  PORTFOLIO
+  CERTIFICATE
+  OTHER
+}
+
+enum ApplicationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
