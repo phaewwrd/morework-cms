@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ArrowLeft, User, Briefcase, Phone, Mail, MapPin, Calendar, DollarSign } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
+import AdminNavbar from '@/components/AdminNavbar'
 
 interface Applicant {
   id: number
@@ -75,11 +76,7 @@ export default function ApplicantDetailPage() {
         setPositions(positionsData.data)
       }
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch applicant data',
-        variant: 'destructive',
-      })
+     console.log(error)
     } finally {
       setLoading(false)
     }

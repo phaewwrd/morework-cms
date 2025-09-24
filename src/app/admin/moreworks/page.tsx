@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { toast } from '@/hooks/use-toast'
+import AdminNavbar from '@/components/AdminNavbar'
 
 interface Applicant {
   id: number
@@ -133,11 +134,13 @@ export default function MoreWorksPage() {
   }
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">MoreWorks Dashboard</h1>
-        <p className="text-muted-foreground">Manage workers and applicants</p>
-      </div>
+    <>
+      <AdminNavbar />
+      <div className="container mx-auto p-6">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold tracking-tight">MoreWorks Dashboard</h1>
+          <p className="text-muted-foreground">Manage workers and applicants</p>
+        </div>
 
       {/* Statistics Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
@@ -312,6 +315,7 @@ export default function MoreWorksPage() {
           )}
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </>
   )
 }

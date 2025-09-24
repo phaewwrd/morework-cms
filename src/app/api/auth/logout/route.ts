@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { type ApiResponse } from '@/lib/validations'
+import { 
+  handleApiError, 
+  createSuccessResponse,
+  type ApiResponse 
+} from '@/lib/api-errors'
 
 export async function POST(): Promise<NextResponse<ApiResponse>> {
   try {
@@ -8,18 +12,9 @@ export async function POST(): Promise<NextResponse<ApiResponse>> {
     const cookieStore = await cookies()
     cookieStore.delete('auth-token')
     
-    return NextResponse.json({
-      success: true,
-      message: 'Logged out successfully',
-    })
+    return createSuccessResponse({}, 'Logged out successfully')
     
   } catch (error) {
-    console.error('Logout error:', error)
-    
-    return NextResponse.json({
-      success: false,
-      message: 'Logout failed',
-      error: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 })
+    return handleApiError(error, 'Auth Logout')
   }
 }

@@ -1,18 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { positionCreateSchema, positionUpdateSchema, type ApiResponse } from '@/lib/validations'
+import { positionCreateSchema, positionUpdateSchema } from '@/lib/validations'
 import { getAuthUserAsync } from '@/lib/jwt'
 import { prisma } from '@/lib/prisma'
+import { 
+  handleApiError, 
+  createErrorResponse, 
+  createSuccessResponse, 
+  ERROR_MESSAGES,
+  type ApiResponse 
+} from '@/lib/api-errors'
 
 export async function GET(request: NextRequest): Promise<NextResponse<ApiResponse>> {
   try {
     // Get authenticated user
     const user = await getAuthUserAsync(request)
     if (!user) {
-      return NextResponse.json({
-        success: false,
-        message: 'Authentication required',
-        error: 'Please login to access positions'
-      }, { status: 401 })
+      return createErrorResponse(ERROR_MESSAGES.UNAUTHORIZED, 401, 'UNAUTHORIZED')
     }
 
     // Find the user's company
@@ -26,11 +29,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
     })
 
     if (!userCompany) {
-      return NextResponse.json({
-        success: false,
-        message: 'Company not found',
-        error: 'No company associated with this user'
-      }, { status: 404 })
+      return createErrorResponse(ERROR_MESSAGES.NOT_FOUND, 404, 'COMPANY_NOT_FOUND')
     }
 
     // Get positions only for the user's company

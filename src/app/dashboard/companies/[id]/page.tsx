@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { PlusCircle, Briefcase, Users, Clock, CheckCircle, XCircle, Eye, Loader2 } from 'lucide-react'
+import { PlusCircle, Briefcase, Users, Clock, CheckCircle, XCircle, Eye, Loader2, LogOut } from 'lucide-react'
 import { useCompanyPositions, useUserCompany } from '@/hooks/use-companies'
 import { useUpdateApplicationStatus } from '@/hooks/use-applications'
 import { parseSecureId } from '@/lib/hash'
@@ -164,6 +164,22 @@ export default function CompanyDashboardPage() {
     router.push(route)
   }
 
+  const handleSignOut = async () => {
+    try {
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+      })
+      
+      if (response.ok) {
+        router.push('/auth/login')
+      } else {
+        console.error('Failed to sign out')
+      }
+    } catch (error) {
+      console.error('Error signing out:', error)
+    }
+  }
+
   // Handle invalid company ID
   if (companyId === null) {
     return (
@@ -229,12 +245,35 @@ export default function CompanyDashboardPage() {
 
   return (
     <div className="container mx-auto p-6 max-w-7xl">
+      {/* Top Navigation Bar */}
+      <div className="flex items-center justify-between mb-6 p-4 border-b">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <Briefcase className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <h1 className="font-semibold text-lg">{userCompany?.title || 'Company'}</h1>
+              <p className="text-sm text-muted-foreground">Dashboard</p>
+            </div>
+          </div>
+        </div>
+        <Button 
+          variant="outline" 
+          onClick={handleSignOut}
+          className="flex items-center gap-2"
+        >
+          <LogOut className="h-4 w-4" />
+          Sign Out
+        </Button>
+      </div>
+
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">
-              {userCompany?.name} Dashboard
+              Company Dashboard
             </h1>
             <p className="text-muted-foreground">Manage your job positions and applications</p>
           </div>
@@ -430,6 +469,7 @@ export default function CompanyDashboardPage() {
                         size="sm" 
                         variant="outline"
                         onClick={() => handleViewApplicants(position.id)}
+                        disabled={!position.applicantPositions || position.applicantPositions.length === 0}
                       >
                         <Eye className="h-4 w-4 mr-2" />
                         View Applicants ({position.applicantPositions?.length || 0})

@@ -1,25 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getAuthUserAsync } from '@/lib/jwt'
+import { 
+  handleApiError, 
+  createErrorResponse, 
+  createSuccessResponse, 
+  ERROR_MESSAGES,
+  type ApiResponse 
+} from '@/lib/api-errors'
 
-export async function GET(request: NextRequest) {
+export async function GET(request: NextRequest): Promise<NextResponse<ApiResponse>> {
   try {
     // Get the authenticated user
     const user = await getAuthUserAsync(request)
 
     if (!user) {
-      return NextResponse.json(
-        { success: false, message: 'Authentication required' },
-        { status: 401 }
-      )
+      return createErrorResponse(ERROR_MESSAGES.UNAUTHORIZED, 401, 'UNAUTHORIZED')
     }
 
     // Check if user is an admin
     if (user.role !== 'admin') {
-      return NextResponse.json(
-        { success: false, message: 'Unauthorized - Admin access required' },
-        { status: 403 }
-      )
+      return createErrorResponse(ERROR_MESSAGES.FORBIDDEN, 403, 'FORBIDDEN')
     }
 
     // Get all companies with their positions and applications
@@ -69,16 +70,9 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    return NextResponse.json({
-      success: true,
-      data: companies
-    })
+    return createSuccessResponse(companies)
 
   } catch (error) {
-    console.error('Error fetching companies:', error)
-    return NextResponse.json(
-      { success: false, message: 'Internal server error' },
-      { status: 500 }
-    )
+    return handleApiError(error, 'Companies GET')
   }
 }

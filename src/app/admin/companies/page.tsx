@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { toast } from '@/hooks/use-toast'
+import AdminNavbar from '@/components/AdminNavbar'
 
 interface Company {
   id: number
@@ -206,11 +207,13 @@ export default function AdminCompaniesPage() {
   }
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard - Companies</h1>
-        <p className="text-muted-foreground">Manage all companies, positions and applicants</p>
-      </div>
+    <>
+      <AdminNavbar />
+      <div className="container mx-auto p-6">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard - Companies</h1>
+          <p className="text-muted-foreground">Manage all companies, positions and applicants</p>
+        </div>
 
       {/* Statistics Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6 mb-8">
@@ -490,6 +493,7 @@ export default function AdminCompaniesPage() {
           )}
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </>
   )
 }
