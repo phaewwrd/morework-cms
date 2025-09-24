@@ -23,7 +23,7 @@ interface Company {
   positions: Array<{
     id: number
     title: string
-    status: 'ACTIVE' | 'INACTIVE' | 'CLOSED'
+    status: 'ACTIVE' | 'INACTIVE' | 'CLOSED' | 'PENDING'
     applicantPositions: Array<{
       id: number
       status: 'PENDING' | 'ACCEPTED' | 'REJECTED'
@@ -132,6 +132,69 @@ export default function AdminCompaniesPage() {
     return matchesSearch
   })
 
+  const updatePositionStatus = async (positionId: number, newStatus: 'ACTIVE' | 'INACTIVE' | 'CLOSED' | 'PENDING') => {
+    try {
+      const response = await fetch(`/api/positions/${positionId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: newStatus }),
+      })
+
+      const data = await response.json()
+      
+      if (data.success) {
+        // Update the companies state
+        setCompanies(prev => 
+          prev.map(company => ({
+            ...company,
+            positions: company.positions.map(position => 
+              position.id === positionId 
+                ? { ...position, status: newStatus }
+                : position
+            )
+          }))
+        )
+        
+        // Recalculate stats
+        const updatedCompanies = companies.map(company => ({
+          ...company,
+          positions: company.positions.map(position => 
+            position.id === positionId 
+              ? { ...position, status: newStatus }
+              : position
+          )
+        }))
+        calculateStats(updatedCompanies)
+        
+        toast({
+          title: 'Success',
+          description: 'Position status updated successfully',
+        })
+      } else {
+        toast({
+          title: 'Error',
+          description: data.message || 'Failed to update status',
+          variant: 'destructive',
+        })
+      }
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to update position status',
+        variant: 'destructive',
+      })
+    }
+  }
+
+  // Get all pending positions across all companies
+  const pendingPositions = companies.flatMap(company => 
+    company.positions
+      .filter(pos => pos.status === 'PENDING')
+      .map(pos => ({ ...pos, company: { id: company.id, title: company.title } }))
+  )
+
   if (loading) {
     return (
       <div className="container mx-auto p-6">
@@ -223,6 +286,89 @@ export default function AdminCompaniesPage() {
         </CardContent>
       </Card>
 
+      {/* Pending Positions Section */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            Pending Positions 
+            <div className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-sm font-medium">
+              {pendingPositions.length}
+            </div>
+          </CardTitle>
+          <CardDescription>
+            Positions awaiting approval - click Approve to activate or Deny to close
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {pendingPositions.length > 0 ? (
+            <div className="space-y-4">
+              {pendingPositions.map((position) => (
+                <div
+                  key={position.id}
+                  className="border rounded-lg p-4 bg-yellow-50 border-yellow-200"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-lg">{position.title}</h4>
+                      <p className="text-sm text-muted-foreground mb-2">
+                        {position.company.title}
+                      </p>
+                      <div className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs font-medium inline-block">
+                        PENDING APPROVAL
+                      </div>
+                    </div>
+                    <div className="flex gap-2 ml-4">
+                      <Button
+                        size="sm"
+                        className="bg-green-600 hover:bg-green-700 text-white"
+                        onClick={() => updatePositionStatus(position.id, 'ACTIVE')}
+                      >
+                        ✓ Approve
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => updatePositionStatus(position.id, 'CLOSED')}
+                      >
+                        ✗ Deny
+                      </Button>
+                    </div>
+                  </div>
+                  {position.applicantPositions.length > 0 && (
+                    <div className="mt-3 pt-3 border-t border-yellow-200">
+                      <p className="text-sm text-gray-600">
+                        {position.applicantPositions.length} applicant{position.applicantPositions.length > 1 ? 's' : ''} waiting
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {/* Skeleton loader for empty state */}
+              <div className="border rounded-lg p-4 bg-gray-50 border-gray-200">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="h-6 bg-gray-200 rounded w-3/4 mb-2 animate-pulse"></div>
+                    <div className="h-4 bg-gray-200 rounded w-1/2 mb-2 animate-pulse"></div>
+                    <div className="h-6 bg-gray-200 rounded w-32 animate-pulse"></div>
+                  </div>
+                  <div className="flex gap-2 ml-4">
+                    <div className="h-8 bg-gray-200 rounded w-20 animate-pulse"></div>
+                    <div className="h-8 bg-gray-200 rounded w-16 animate-pulse"></div>
+                  </div>
+                </div>
+              </div>
+              <div className="text-center py-4 text-muted-foreground">
+                <p className="text-sm">No pending positions at the moment</p>
+                <p className="text-xs mt-1">New positions will appear here when they need approval</p>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Companies List */}
       <Card>
         <CardHeader>
@@ -284,7 +430,8 @@ export default function AdminCompaniesPage() {
                                   <div className="flex items-center gap-2 mt-1">
                                     <div className={`px-2 py-1 rounded text-xs font-medium ${
                                       position.status === 'ACTIVE' ? 'bg-green-100 text-green-800' :
-                                      position.status === 'INACTIVE' ? 'bg-yellow-100 text-yellow-800' :
+                                      position.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                                      position.status === 'INACTIVE' ? 'bg-gray-100 text-gray-800' :
                                       'bg-red-100 text-red-800'
                                     }`}>
                                       {position.status}
