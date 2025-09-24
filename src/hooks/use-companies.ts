@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { companiesApi } from '@/lib/api-client'
+import { useAuth } from '@/hooks/use-auth'
+import { companiesApi, positionsApi } from '@/lib/api-client'
 import { queryKeys } from '@/lib/query-keys'
+import { createSecureId } from '@/lib/hash'
 import { toast } from '@/hooks/use-toast'
 
 // Company queries
@@ -117,5 +119,35 @@ export function useDeleteCompany() {
         variant: 'destructive',
       })
     },
+  })
+}
+
+// User's company specific hooks
+export function useUserCompany() {
+  const { data: user } = useAuth()
+  
+  return useQuery({
+    queryKey: queryKeys.companies.userCompany(user?.data?.userId || 0),
+    queryFn: async () => {
+      const response = await companiesApi.getCurrentUserCompany()
+      if (response.data) {
+        return {
+          ...response.data,
+          name: response.data.title, // Map title to name for consistency
+          secureId: createSecureId(response.data.id)
+        }
+      }
+      return null
+    },
+    enabled: !!user?.data?.userId,
+    staleTime: 10 * 60 * 1000, // 10 minutes
+  })
+}
+
+export function useCompanyPositions() {
+  return useQuery({
+    queryKey: queryKeys.positions.byCompany(0), // Use 0 for current user's company
+    queryFn: () => positionsApi.getAll(), // This now returns only user's company positions
+    staleTime: 5 * 60 * 1000, // 5 minutes
   })
 }

@@ -33,6 +33,7 @@ declare namespace __next_route_internal_types__ {
 
   type StaticRoutes = 
     | `/`
+    | `/admin/applicants`
     | `/admin/companies`
     | `/admin/moreworks`
     | `/api/applicants`
@@ -40,20 +41,25 @@ declare namespace __next_route_internal_types__ {
     | `/api/auth/logout`
     | `/api/auth/me`
     | `/api/auth/register`
+    | `/api/companies`
     | `/api/companies/applicants`
-    | `/api/health`
+    | `/api/companies/me`
+    | `/api/debug`
     | `/api/positions`
     | `/api/users`
     | `/auth/login`
     | `/auth/register`
+    | `/dashboard`
     | `/dashboard/companies`
-    | `/dashboard/companies/applicants`
-    | `/dashboard/companies/create-job`
   type DynamicRoutes<T extends string = string> = 
+    | `/admin/moreworks/applicant/${SafeSlug<T>}`
     | `/api/applicants/${SafeSlug<T>}`
     | `/api/applications/${SafeSlug<T>}`
     | `/api/positions/${SafeSlug<T>}`
-    | `/dashboard/companies/applicants/${SafeSlug<T>}`
+    | `/dashboard/companies/${SafeSlug<T>}`
+    | `/dashboard/companies/${SafeSlug<T>}/applicants`
+    | `/dashboard/companies/${SafeSlug<T>}/applicants/${SafeSlug<T>}`
+    | `/dashboard/companies/${SafeSlug<T>}/create-job`
 
   type RouteImpl<T> = 
     | StaticRoutes

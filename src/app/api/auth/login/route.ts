@@ -14,13 +14,13 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
     // Find user by email
     const user = await prisma.user.findUnique({
       where: { email: validatedData.email },
-      select: {
-        id: true,
-        email: true,
-        role: true,
-        emailVerified: true,
-        password: true,
-        createdAt: true,
+      include: {
+        companies: {
+          select: {
+            id: true,
+            title: true
+          }
+        }
       }
     })
     
@@ -51,12 +51,16 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
         error: 'Password is incorrect'
       }, { status: 401 })
     }
+
+    // Get the user's company ID (if they are a company user)
+    const companyId = user.companies.length > 0 ? user.companies[0].id : undefined
     
-    // Generate JWT token
+    // Generate JWT token with company ID
     const token = generateToken({
-      userId: user.id,
+      userId: user.id.toString(), // Convert to string for JWT
       email: user.email,
       role: user.role,
+      companyId: companyId
     })
     
     // Set HttpOnly cookie
@@ -69,7 +73,9 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
       role: user.role,
       emailVerified: user.emailVerified,
       createdAt: user.createdAt,
+      companyId: companyId
     }
+    
     
     return NextResponse.json({
       success: true,

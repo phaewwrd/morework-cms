@@ -1,8 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { toast } from '@/hooks/use-toast'
 
 interface Applicant {
@@ -22,6 +24,15 @@ interface Applicant {
   expectedSalary: number
   currentlyEmployed: boolean
   applicationStatus: 'PENDING' | 'ACCEPTED' | 'REJECTED'
+  positions?: Array<{
+    id: number
+    title: string
+    status: 'ACTIVE' | 'INACTIVE' | 'CLOSED'
+    applicationStatus: 'PENDING' | 'ACCEPTED' | 'REJECTED'
+    company: {
+      title: string
+    }
+  }>
 }
 
 interface ApplicantStats {
@@ -32,6 +43,7 @@ interface ApplicantStats {
 }
 
 export default function MoreWorksPage() {
+  const router = useRouter()
   const [applicants, setApplicants] = useState<Applicant[]>([])
   const [stats, setStats] = useState<ApplicantStats>({
     total: 0,
@@ -106,49 +118,8 @@ export default function MoreWorksPage() {
     return matchesSearch && matchesGender && matchesStatus
   })
 
-  const updateApplicantStatus = async (applicantId: number, newStatus: 'ACCEPTED' | 'REJECTED' | 'PENDING') => {
-    try {
-      const response = await fetch(`/api/applicants/${applicantId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ applicationStatus: newStatus }),
-      })
-
-      const data = await response.json()
-      
-      if (data.success) {
-        setApplicants(prev => 
-          prev.map(applicant => 
-            applicant.id === applicantId 
-              ? { ...applicant, applicationStatus: newStatus }
-              : applicant
-          )
-        )
-        calculateStats(applicants.map(applicant => 
-          applicant.id === applicantId 
-            ? { ...applicant, applicationStatus: newStatus }
-            : applicant
-        ))
-        toast({
-          title: 'Success',
-          description: 'Applicant status updated successfully',
-        })
-      } else {
-        toast({
-          title: 'Error',
-          description: data.message || 'Failed to update status',
-          variant: 'destructive',
-        })
-      }
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to update applicant status',
-        variant: 'destructive',
-      })
-    }
+  const handleViewApplicant = (applicantId: number) => {
+    router.push(`/admin/moreworks/applicant/${applicantId}` as any)
   }
 
   if (loading) {
@@ -234,7 +205,7 @@ export default function MoreWorksPage() {
                 onChange={(e) => setGenderFilter(e.target.value)}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
-                <option value="">All Genders</option>
+                <option value="ALL">All Genders</option>
                 <option value="MALE">Male</option>
                 <option value="FEMALE">Female</option>
                 <option value="OTHER">Other</option>
@@ -250,7 +221,7 @@ export default function MoreWorksPage() {
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
-                <option value="">All Statuses</option>
+                <option value="ALL">All Statuses</option>
                 <option value="PENDING">Pending</option>
                 <option value="ACCEPTED">Accepted</option>
                 <option value="REJECTED">Rejected</option>
@@ -288,8 +259,32 @@ export default function MoreWorksPage() {
                       <p>Email: {applicant.email}</p>
                       <p>Phone: {applicant.phone}</p>
                       <p>Gender: {applicant.gender}</p>
-                      <p>Experience: {applicant.experience} years</p>
-                      <p>Expected Salary: ${applicant.expectedSalary?.toLocaleString()}</p>
+                      {applicant.positions && applicant.positions.length > 0 && (
+                        <div>
+                          <p className="font-medium text-foreground mb-1">Applied Positions:</p>
+                          <div className="space-y-1">
+                            {applicant.positions.map((position) => (
+                              <div key={position.id} className="flex items-center gap-2 flex-wrap">
+                                <span className="text-xs">{position.title}</span>
+                                <span className="text-xs text-muted-foreground">at {position.company.title}</span>
+                                <Badge
+                                  variant={
+                                    position.applicationStatus === 'ACCEPTED' ? 'default' :
+                                    position.applicationStatus === 'PENDING' ? 'secondary' : 'destructive'
+                                  }
+                                  className={
+                                    position.applicationStatus === 'ACCEPTED' ? 'bg-green-100 text-green-800 hover:bg-green-100' :
+                                    position.applicationStatus === 'PENDING' ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100' :
+                                    'bg-red-100 text-red-800 hover:bg-red-100'
+                                  }
+                                >
+                                  {position.applicationStatus}
+                                </Badge>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div className="flex flex-col gap-2 ml-4">
@@ -301,36 +296,14 @@ export default function MoreWorksPage() {
                       {applicant.applicationStatus}
                     </div>
                     <div className="flex gap-1">
-                      {applicant.applicationStatus !== 'ACCEPTED' && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-green-600 hover:bg-green-50"
-                          onClick={() => updateApplicantStatus(applicant.id, 'ACCEPTED')}
-                        >
-                          Accept
-                        </Button>
-                      )}
-                      {applicant.applicationStatus !== 'REJECTED' && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-red-600 hover:bg-red-50"
-                          onClick={() => updateApplicantStatus(applicant.id, 'REJECTED')}
-                        >
-                          Reject
-                        </Button>
-                      )}
-                      {applicant.applicationStatus !== 'PENDING' && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-yellow-600 hover:bg-yellow-50"
-                          onClick={() => updateApplicantStatus(applicant.id, 'PENDING')}
-                        >
-                          Pending
-                        </Button>
-                      )}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-blue-600 hover:bg-blue-50"
+                        onClick={() => handleViewApplicant(applicant.id)}
+                      >
+                        View Details
+                      </Button>
                     </div>
                   </div>
                 </div>

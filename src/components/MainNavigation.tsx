@@ -18,6 +18,16 @@ const navigation = [
     description: 'Company & Position Management'
   },
   {
+    name: 'Admin - Companies',
+    href: '/admin/companies',
+    description: 'Admin view of all companies'
+  },
+  {
+    name: 'Admin - Applicants',
+    href: '/admin/applicants',
+    description: 'Admin view of all applicants'
+  },
+  {
     name: 'API Health',
     href: '/api/health',
     description: 'Check API Status'

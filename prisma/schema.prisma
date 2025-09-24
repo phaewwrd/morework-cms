@@ -9,7 +9,7 @@ datasource db {
 }
 
 model User {
-  id            Int    @id @default(autoincrement()) 
+  id            String    @id @default(uuid()) @db.VarChar(191)
   email         String
   emailVerified Boolean   @default(false)
   image         String?   @db.Text
@@ -37,7 +37,7 @@ model Company {
   contactPhone String @map("contact_phone") @db.VarChar(191)
   taxpayerID  String  @map("taxpayer_id") @db.VarChar(191)
   zipCode     String  @map("zip_code") @db.VarChar(20)
-  userId     Int  @map("user_id") @unique
+  userId     String  @map("user_id") @unique
 
 
 

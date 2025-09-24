@@ -15,7 +15,29 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
       }, { status: 401 })
     }
 
+    // Find the user's company
+    const userCompany = await prisma.company.findFirst({
+      where: {
+        userId: user.userId
+      },
+      select: {
+        id: true
+      }
+    })
+
+    if (!userCompany) {
+      return NextResponse.json({
+        success: false,
+        message: 'Company not found',
+        error: 'No company associated with this user'
+      }, { status: 404 })
+    }
+
+    // Get positions only for the user's company
     const positions = await prisma.position.findMany({
+      where: {
+        companyId: userCompany.id
+      },
       orderBy: { id: 'desc' },
       include: {
         company: {

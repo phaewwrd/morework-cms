@@ -13,7 +13,7 @@ export class ApiError extends Error {
 }
 
 // API client configuration
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || ''
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3002')
 
 // Generic API client with authentication
 class ApiClient {
@@ -143,6 +143,9 @@ export const companiesApi = {
   update: (id: number, company: any) => apiClient.put(`/companies/${id}`, company),
   
   delete: (id: number) => apiClient.delete(`/companies/${id}`),
+  
+  // Get current user's company
+  getCurrentUserCompany: () => apiClient.get('/companies/me'),
   
   // Company-specific applicants
   getApplicants: () => apiClient.get('/companies/applicants'),

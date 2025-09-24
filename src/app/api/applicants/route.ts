@@ -17,12 +17,42 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
 
     const applicants = await prisma.applicant.findMany({
       orderBy: { id: 'desc' },
+      include: {
+        positions: {
+          include: {
+            position: {
+              select: {
+                id: true,
+                title: true,
+                status: true,
+                company: {
+                  select: {
+                    title: true
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     })
+    
+    // Transform the data to include positions in the expected format
+    const transformedApplicants = applicants.map(applicant => ({
+      ...applicant,
+      positions: applicant.positions.map(ap => ({
+        id: ap.position.id,
+        title: ap.position.title,
+        status: ap.position.status,
+        applicationStatus: ap.status,
+        company: ap.position.company
+      }))
+    }))
     
     return NextResponse.json({
       success: true,
       message: 'Applicants retrieved successfully',
-      data: applicants
+      data: transformedApplicants
     })
     
   } catch (error) {

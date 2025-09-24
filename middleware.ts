@@ -4,8 +4,7 @@ import { getAuthUser } from '@/lib/jwt'
 
 // Define protected routes that require authentication
 const protectedRoutes = [
-  '/moreworks',
-  '/companies',
+  '/admin',
   '/dashboard',
 ]
 
@@ -25,7 +24,6 @@ const publicRoutes = [
   '/auth/register',
   '/api/auth/login',
   '/api/auth/register',
-  '/api/health',
 ]
 
 export function middleware(request: NextRequest) {
@@ -40,7 +38,7 @@ export function middleware(request: NextRequest) {
   const isProtectedApiRoute = protectedApiRoutes.some(route => pathname.startsWith(route))
 
   // Handle API routes
-  if (pathname.startsWith('/api/')) {
+
     // If it's a protected API route and user is not authenticated
     if (isProtectedApiRoute && !user) {
       return NextResponse.json(
@@ -49,26 +47,24 @@ export function middleware(request: NextRequest) {
       )
     }
     
-    // Allow API routes to continue
-    return NextResponse.next()
-  }
+    
 
   // Handle authentication routes
-  if (pathname.startsWith('/auth/')) {
-    // If user is already authenticated, redirect based on role
-    if (user) {
-      if (user.role === 'company') {
-        return NextResponse.redirect(new URL('/companies', request.url))
-      } else if (user.role === 'moreworks') {
-        return NextResponse.redirect(new URL('/moreworks', request.url))
-      }
-      // Default redirect for other roles
-      return NextResponse.redirect(new URL('/', request.url))
-    }
+//   if (pathname.startsWith('/auth/')) {
+//     // If user is already authenticated, redirect based on role
+//     if (user) {
+//       if (user.role === 'company') {
+//         return NextResponse.redirect(new URL('/dashboard/companies', request.url))
+//       } else if (user.role === 'moreworks') {
+//         return NextResponse.redirect(new URL('/admin', request.url))
+//       }
+//       // Default redirect for other roles
+//       return NextResponse.redirect(new URL('/', request.url))
+//     }
     
-    // Allow unauthenticated users to access auth pages
-    return NextResponse.next()
-  }
+//     // Allow unauthenticated users to access auth pages
+//     return NextResponse.next()
+//   }
 
   // Handle protected dashboard routes
   if (isProtectedRoute) {
@@ -80,33 +76,40 @@ export function middleware(request: NextRequest) {
     }
 
     // Role-based access control for dashboard routes
-    if (pathname.startsWith('/moreworks')) {
-      if (user.role !== 'moreworks' && user.role !== 'admin') {
+    if (pathname.startsWith('/admin')) {
         // Redirect to appropriate dashboard based on role
         if (user.role === 'company') {
-          return NextResponse.redirect(new URL('/companies', request.url))
+          return NextResponse.redirect(new URL('/dashboard', request.url))
         }
         return NextResponse.redirect(new URL('/', request.url))
       }
-    }
+    
 
-    if (pathname.startsWith('/companies')) {
+    if (pathname.startsWith('/dashboard')) {
       if (user.role !== 'company' && user.role !== 'admin') {
         // Redirect to appropriate dashboard based on role
-        if (user.role === 'moreworks') {
-          return NextResponse.redirect(new URL('/moreworks', request.url))
-        }
-        return NextResponse.redirect(new URL('/', request.url))
+      
+        return NextResponse.redirect(new URL('/auth/login', request.url))
+      }
+    }
+
+    if (pathname.startsWith('/admin')) {
+      if (user.role !== 'admin') {
+        // Redirect to appropriate dashboard based on role
+      
+        return NextResponse.redirect(new URL('/auth/login', request.url))
       }
     }
   }
 
+  
+
   // Handle root route - redirect authenticated users to appropriate dashboard
   if (pathname === '/' && user) {
     if (user.role === 'company') {
-      return NextResponse.redirect(new URL('/companies', request.url))
-    } else if (user.role === 'moreworks') {
-      return NextResponse.redirect(new URL('/moreworks', request.url))
+      return NextResponse.redirect(new URL('/dashboard', request.url))
+    } else if (user.role === 'admin') {
+      return NextResponse.redirect(new URL('/admin/moreworks', request.url))
     }
   }
 

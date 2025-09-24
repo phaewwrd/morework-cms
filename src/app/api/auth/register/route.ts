@@ -24,10 +24,10 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
       }, { status: 409 })
     }
     
-    // Hash password
+        // Hash password
     const hashedPassword = await hashPassword(validatedData.password)
     
-    // Create user with a temporary ID that matches the schema
+    // Create user - let Prisma handle auto-increment ID
     const user = await prisma.user.create({
       data: {
         email: validatedData.email,
@@ -35,14 +35,12 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
         role: validatedData.role || 'company',
         password: hashedPassword,
         image: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
       }
     })
     
     // Generate JWT token
     const token = generateToken({
-      userId: user.id,
+      userId: user.id.toString(), // Convert to string for JWT
       email: user.email,
       role: user.role,
     })

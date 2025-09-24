@@ -14,6 +14,7 @@ export const queryKeys = {
     details: () => [...queryKeys.companies.all, 'detail'] as const,
     detail: (id: number) => [...queryKeys.companies.details(), id] as const,
     stats: () => [...queryKeys.companies.all, 'stats'] as const,
+    userCompany: (userId: number) => [...queryKeys.companies.all, 'userCompany', userId] as const,
   },
 
   // Position/Job queries

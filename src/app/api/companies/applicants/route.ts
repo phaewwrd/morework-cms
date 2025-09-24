@@ -1,37 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server'
-import jwt from 'jsonwebtoken'
 import { prisma } from '@/lib/prisma'
+import { getAuthUserAsync } from '@/lib/jwt'
 
 export async function GET(request: NextRequest) {
   try {
-    // Get the authorization header
-    const authHeader = request.headers.get('authorization')
-    const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : request.cookies.get('token')?.value
+    // Get the authenticated user
+    const user = await getAuthUserAsync(request)
 
-    if (!token) {
+    if (!user) {
       return NextResponse.json(
-        { success: false, message: 'Access token required' },
+        { success: false, message: 'Authentication required' },
         { status: 401 }
       )
     }
 
-    // Verify the token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { 
-      id: number
-      email: string
-      role: string
-      companyId?: number
-    }
-
     // Check if user is a company
-    if (decoded.role !== 'COMPANY') {
+    if (user.role !== 'company') {
       return NextResponse.json(
         { success: false, message: 'Unauthorized - Company access required' },
         { status: 403 }
       )
     }
 
-    if (!decoded.companyId) {
+    if (!user.companyId) {
       return NextResponse.json(
         { success: false, message: 'Company ID not found' },
         { status: 400 }
@@ -41,7 +32,7 @@ export async function GET(request: NextRequest) {
     // Get all positions for this company
     const positions = await prisma.position.findMany({
       where: {
-        companyId: decoded.companyId
+        companyId: user.companyId
       },
       select: {
         id: true
@@ -122,13 +113,6 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Error fetching company applicants:', error)
     
-    if (error instanceof jwt.JsonWebTokenError) {
-      return NextResponse.json(
-        { success: false, message: 'Invalid token' },
-        { status: 401 }
-      )
-    }
-
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }
