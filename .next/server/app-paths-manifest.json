@@ -1,9 +1,6 @@
 {
   "/api/applicants/route": "app/api/applicants/route.js",
   "/api/applicants/[id]/route": "app/api/applicants/[id]/route.js",
-  "/_not-found/page": "app/_not-found/page.js",
   "/admin/moreworks/page": "app/admin/moreworks/page.js",
-  "/admin/companies/page": "app/admin/companies/page.js",
-  "/admin/moreworks/applicant/[id]/page": "app/admin/moreworks/applicant/[id]/page.js",
-  "/dashboard/companies/[id]/applicants/page": "app/dashboard/companies/[id]/applicants/page.js"
+  "/admin/moreworks/applicant/[id]/page": "app/admin/moreworks/applicant/[id]/page.js"
 }

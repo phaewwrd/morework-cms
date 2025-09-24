@@ -291,13 +291,7 @@ export default function MoreWorksPage() {
                     </div>
                   </div>
                   <div className="flex flex-col gap-2 ml-4">
-                    <div className={`px-2 py-1 rounded text-xs font-medium text-center ${
-                      applicant.applicationStatus === 'ACCEPTED' ? 'bg-green-100 text-green-800' :
-                      applicant.applicationStatus === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-red-100 text-red-800'
-                    }`}>
-                      {applicant.applicationStatus}
-                    </div>
+            
                     <div className="flex gap-1">
                       <Button
                         size="sm"

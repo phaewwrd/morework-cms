@@ -44,6 +44,7 @@ declare namespace __next_route_internal_types__ {
     | `/api/companies/applicants`
     | `/api/companies/me`
     | `/api/debug`
+    | `/api/job-types`
     | `/api/positions`
     | `/api/users`
     | `/auth/login`
@@ -53,6 +54,9 @@ declare namespace __next_route_internal_types__ {
   type DynamicRoutes<T extends string = string> = 
     | `/admin/moreworks/applicant/${SafeSlug<T>}`
     | `/api/applicants/${SafeSlug<T>}`
+    | `/api/applicants/${SafeSlug<T>}/addresses`
+    | `/api/applicants/${SafeSlug<T>}/addresses/${SafeSlug<T>}`
+    | `/api/applicants/${SafeSlug<T>}/job-types`
     | `/api/applications/${SafeSlug<T>}`
     | `/api/positions/${SafeSlug<T>}`
     | `/dashboard/companies/${SafeSlug<T>}`

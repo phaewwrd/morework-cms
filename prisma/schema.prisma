@@ -15,7 +15,7 @@ model User {
   image         String?   @db.Text
   password      String?   @db.Text
   createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @default(now()) @updatedAt
+  updatedAt     DateTime  @default(now()) 
   role          String    @default("company") @db.VarChar(50)
 
   companies     Company[]
@@ -194,8 +194,8 @@ model ApplicantsJobType {
 model JobType {
   id        Int        @id @default(autoincrement())
   title     String     @db.VarChar(191)
-  createdAt DateTime   @default(now()) @map("created_at")
-  updatedAt DateTime   @updatedAt @map("updated_at")
+  createdAt DateTime?   @default(now()) @map("created_at")
+  updatedAt DateTime?    @default(now()) @map("updated_at")
 
   applicantsJobTypes ApplicantsJobType[]
 
@@ -207,8 +207,8 @@ model SocialMedia {
   provider  String   @db.VarChar(191)
   sessionId String   @db.Text
   applicantId Int    @map("applicant_id")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime? @default(now()) @map("created_at")
+  updatedAt DateTime?  @default(now()) @map("updated_at")
 
   // Relations
   applicant Applicant @relation(fields: [applicantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
@@ -221,8 +221,8 @@ model EducationLevel {
   title     String   @db.VarChar(191)
   code      String   @unique @db.VarChar(191)
   rank      Int
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime? @default(now()) @map("created_at")
+  updatedAt DateTime?  @default(now()) @map("updated_at")
 
   // Relations
   applicantEducations ApplicantEducation[]
@@ -235,8 +235,8 @@ model District {
   id        Int       @id @default(autoincrement())
   title     String    @db.VarChar(191)
   provinceId Int      @map("province_id")
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @updatedAt @map("updated_at")
+  createdAt DateTime?  @default(now()) @map("created_at")
+  updatedAt DateTime?   @default(now()) @map("updated_at")
 
   // Relations
   province  Province         @relation(fields: [provinceId], references: [id], onDelete: Cascade, onUpdate: Cascade)
@@ -248,8 +248,8 @@ model District {
 model Province {
   id        Int       @id @default(autoincrement())
   title     String    @db.VarChar(191)
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @updatedAt @map("updated_at")
+  createdAt DateTime?  @default(now()) @map("created_at")
+  updatedAt DateTime?  @default(now()) @map("updated_at")
 
   // Relations
   districts District[]
