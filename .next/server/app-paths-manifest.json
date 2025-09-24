@@ -1,6 +1,14 @@
 {
+  "/api/auth/logout/route": "app/api/auth/logout/route.js",
+  "/api/auth/login/route": "app/api/auth/login/route.js",
   "/api/applicants/route": "app/api/applicants/route.js",
-  "/api/applicants/[id]/route": "app/api/applicants/[id]/route.js",
+  "/api/companies/me/route": "app/api/companies/me/route.js",
+  "/api/positions/route": "app/api/positions/route.js",
+  "/api/auth/me/route": "app/api/auth/me/route.js",
+  "/admin/moreworks/applicant/[id]/page": "app/admin/moreworks/applicant/[id]/page.js",
+  "/dashboard/companies/page": "app/dashboard/companies/page.js",
+  "/admin/companies/page": "app/admin/companies/page.js",
   "/admin/moreworks/page": "app/admin/moreworks/page.js",
-  "/admin/moreworks/applicant/[id]/page": "app/admin/moreworks/applicant/[id]/page.js"
+  "/dashboard/companies/[id]/page": "app/dashboard/companies/[id]/page.js",
+  "/auth/login/page": "app/auth/login/page.js"
 }

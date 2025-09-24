@@ -35,7 +35,7 @@ interface EditableFieldProps {
 
 function EditableField({ value, onSave, type = 'text', placeholder }: EditableFieldProps) {
   const [isEditing, setIsEditing] = useState(false)
-  const [editValue, setEditValue] = useState(value?.toString())
+  const [editValue, setEditValue] = useState(value?.toLocaleString())
 
   const handleSave = () => {
     onSave(editValue)

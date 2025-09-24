@@ -24,7 +24,6 @@ interface Applicant {
   experience: number
   expectedSalary: number
   currentlyEmployed: boolean
-  applicationStatus: 'PENDING' | 'ACCEPTED' | 'REJECTED'
   positions?: Array<{
     id: number
     title: string
@@ -91,17 +90,27 @@ export default function MoreWorksPage() {
     const stats = applicantData.reduce(
       (acc, applicant) => {
         acc.total += 1
-        switch (applicant.applicationStatus) {
-          case 'ACCEPTED':
+        
+        // Check if applicant has any positions and get their statuses
+        if (applicant.positions && applicant.positions.length > 0) {
+          // Count status from all applications, but avoid double counting the same applicant
+          const hasAccepted = applicant.positions.some(pos => pos.applicationStatus === 'ACCEPTED')
+          const hasPending = applicant.positions.some(pos => pos.applicationStatus === 'PENDING')
+          const hasRejected = applicant.positions.some(pos => pos.applicationStatus === 'REJECTED')
+          
+          // Prioritize status: ACCEPTED > PENDING > REJECTED
+          if (hasAccepted) {
             acc.accepted += 1
-            break
-          case 'PENDING':
+          } else if (hasPending) {
             acc.pending += 1
-            break
-          case 'REJECTED':
+          } else if (hasRejected) {
             acc.rejected += 1
-            break
+          }
+        } else {
+          // If no positions, consider as pending (no applications yet)
+          acc.pending += 1
         }
+        
         return acc
       },
       { total: 0, accepted: 0, pending: 0, rejected: 0 }
@@ -113,8 +122,20 @@ export default function MoreWorksPage() {
     const matchesSearch = 
       applicant.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       applicant.lastName.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesGender = genderFilter === '' || applicant.gender === genderFilter
-    const matchesStatus = statusFilter === '' || applicant.applicationStatus === statusFilter
+    const matchesGender = genderFilter === '' || genderFilter === 'ALL' || applicant.gender === genderFilter
+    
+    // Handle status filtering based on applicant's positions
+    let matchesStatus = true
+    if (statusFilter !== '' && statusFilter !== 'ALL') {
+      if (applicant.positions && applicant.positions.length > 0) {
+        // Check if any of the applicant's positions match the filter status
+        const hasStatusMatch = applicant.positions.some(pos => pos.applicationStatus === statusFilter)
+        matchesStatus = hasStatusMatch
+      } else {
+        // If no positions, consider as pending
+        matchesStatus = statusFilter === 'PENDING'
+      }
+    }
     
     return matchesSearch && matchesGender && matchesStatus
   })
