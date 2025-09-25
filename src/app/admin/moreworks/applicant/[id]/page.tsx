@@ -40,14 +40,6 @@ export default function ApplicantDetailPage() {
 
   const [isEditing, setIsEditing] = useState(false)
   const [formData, setFormData] = useState<Partial<ApplicantDetail>>({})
-  const [editingSections, setEditingSections] = useState({
-    addresses: false,
-    educations: false,
-    workExperiences: false,
-    trainings: false,
-    documents: false,
-    jobTypes: false
-  })
   const [selectedJobTypes, setSelectedJobTypes] = useState<number[]>([])
 
   // Initialize form data when applicant data loads
@@ -73,25 +65,52 @@ export default function ApplicantDetailPage() {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
-  const handleSave = async () => {
+
+const handleSave = async () => {
     try {
-      await updateApplicantMutation.mutateAsync({
-        id: applicantId,
-        data: formData
+      // Prepare data in the format expected by the API
+      const apiData = {
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        email: formData.email,
+        phone: formData.phone,
+        gender: formData.gender,
+        birth_date: formData.birthDate,
+        StartWorkingDate: formData.startWorkingDate,
+        prefferedLocation: formData.prefferedLocation,
+        preferred_job_type: selectedJobTypes
+      }
+
+      // Update applicant information using the existing API
+      const response = await fetch(`/api/applicants/${applicantId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(apiData)
       })
+
+      if (!response.ok) {
+        throw new Error('Failed to update applicant')
+      }
+
       toast({
         title: "Success",
         description: "Applicant information updated successfully",
       })
       setIsEditing(false)
+      
+      // Refetch the data to show updated values
+      window.location.reload()
     } catch (error) {
       toast({
         title: "Error",
         description: "Failed to update applicant information",
         variant: "destructive",
       })
-    }
+    } 
   }
+
 
   const handleCancel = () => {
     // Reset form data to original values
@@ -107,46 +126,9 @@ export default function ApplicantDetailPage() {
         startWorkingDate: applicant.startWorkingDate,
         prefferedLocation: applicant.prefferedLocation,
       })
-    }
-    setIsEditing(false)
-  }
-
-  const toggleSectionEdit = (section: keyof typeof editingSections) => {
-    setEditingSections(prev => ({ ...prev, [section]: !prev[section] }))
-  }
-
-  const handleSectionSave = async (section: keyof typeof editingSections) => {
-    try {
-      if (section === 'jobTypes') {
-        // Handle job types update specifically
-        await updateJobTypesMutation.mutateAsync({
-          applicantId: applicantId,
-          jobTypeIds: selectedJobTypes
-        })
-      }
-      // For other sections, just toggle off edit mode for now
-      // TODO: Implement actual save functionality for other sections
-      
-      setEditingSections(prev => ({ ...prev, [section]: false }))
-      toast({
-        title: "Success",
-        description: `${section.charAt(0).toUpperCase() + section.slice(1)} updated successfully`,
-      })
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: `Failed to update ${section}`,
-        variant: "destructive",
-      })
-    }
-  }
-
-  const handleSectionCancel = (section: keyof typeof editingSections) => {
-    // Reset any changes and exit edit mode
-    if (section === 'jobTypes' && applicant) {
       setSelectedJobTypes(applicant.jobTypes?.map(jt => jt.jobType.id) || [])
     }
-    setEditingSections(prev => ({ ...prev, [section]: false }))
+    setIsEditing(false)
   }
 
   const formatDateForInput = (dateString: string) => {
@@ -155,6 +137,15 @@ export default function ApplicantDetailPage() {
       return date.getTime() > 0 ? date.toISOString().split('T')[0] : '1970-01-01'
     } catch {
       return '1970-01-01'
+    }
+  }
+
+  const formatDateForDisplay = (dateString: string) => {
+    try {
+      const date = new Date(dateString)
+      return date.getTime() > 0 ? date.toLocaleDateString() : 'Invalid Date'
+    } catch {
+      return 'Invalid Date'
     }
   }
 
@@ -191,6 +182,8 @@ export default function ApplicantDetailPage() {
     )
   }
 
+  const isUpdating = updateApplicantMutation.isPending || updateJobTypesMutation.isPending
+
   return (
     <div className="min-h-screen bg-gray-50">
       <AdminNavbar />
@@ -216,16 +209,16 @@ export default function ApplicantDetailPage() {
                 <>
                   <Button 
                     onClick={handleSave} 
-                    disabled={updateApplicantMutation.isPending}
+                    disabled={isUpdating}
                     className="bg-green-600 hover:bg-green-700"
                   >
                     <Save className="h-4 w-4 mr-2" />
-                    {updateApplicantMutation.isPending ? 'Saving...' : 'Save'}
+                    {isUpdating ? 'Saving...' : 'Save'}
                   </Button>
                   <Button 
                     onClick={handleCancel} 
                     variant="outline"
-                    disabled={updateApplicantMutation.isPending}
+                    disabled={isUpdating}
                   >
                     <X className="h-4 w-4 mr-2" />
                     Cancel
@@ -364,7 +357,7 @@ export default function ApplicantDetailPage() {
                         className="mt-1"
                       />
                     ) : (
-                      <p className="mt-1 text-sm">{formatDateForInput(applicant.birthDate)}</p>
+                      <p className="mt-1 text-sm">{formatDateForDisplay(applicant.birthDate)}</p>
                     )}
                   </div>
                 </div>
@@ -380,7 +373,7 @@ export default function ApplicantDetailPage() {
                         className="mt-1"
                       />
                     ) : (
-                      <p className="mt-1 text-sm">{formatDateForInput(applicant.startWorkingDate)}</p>
+                      <p className="mt-1 text-sm">{formatDateForDisplay(applicant.startWorkingDate)}</p>
                     )}
                   </div>
                   <div>
@@ -400,67 +393,23 @@ export default function ApplicantDetailPage() {
               </CardContent>
             </Card>
 
-            {/* Addresses */}
+            {/* Addresses - Read Only */}
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    <MapPin className="h-5 w-5" />
-                    Addresses
-                  </CardTitle>
-                  <div className="flex gap-2">
-                    {editingSections.addresses ? (
-                      <>
-                        <Button size="sm" onClick={() => handleSectionSave('addresses')}>
-                          <Save className="h-4 w-4 mr-1" />
-                          Save
-                        </Button>
-                        <Button size="sm" variant="outline" onClick={() => handleSectionCancel('addresses')}>
-                          <X className="h-4 w-4 mr-1" />
-                          Cancel
-                        </Button>
-                      </>
-                    ) : (
-                      <Button size="sm" variant="outline" onClick={() => toggleSectionEdit('addresses')}>
-                        <Edit className="h-4 w-4 mr-1" />
-                        Edit
-                      </Button>
-                    )}
-                  </div>
-                </div>
+                <CardTitle className="flex items-center gap-2">
+                  <MapPin className="h-5 w-5" />
+                  Addresses
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 {applicant.addresses.length > 0 ? (
                   <div className="space-y-3">
-                    {applicant.addresses.map((address, index) => (
+                    {applicant.addresses.map((address) => (
                       <div key={address.id} className="p-3 border rounded-lg">
-                        {editingSections.addresses ? (
-                          <div className="space-y-3">
-                            <Input
-                              placeholder="Address"
-                              defaultValue={address.address}
-                              className="mb-2"
-                            />
-                            <div className="text-sm text-gray-600">
-                              <Input
-                                placeholder="District"
-                                defaultValue={address.district.title}
-                                className="mb-2"
-                              />
-                              <Input
-                                placeholder="Province"
-                                defaultValue={address.district.province.title}
-                              />
-                            </div>
-                          </div>
-                        ) : (
-                          <>
-                            <p className="font-medium">{address.address}</p>
-                            <p className="text-sm text-gray-600">
-                              {address.district.title}, {address.district.province.title}
-                            </p>
-                          </>
-                        )}
+                        <p className="font-medium">{address.address}</p>
+                        <p className="text-sm text-gray-600">
+                          {address.district.title}, {address.district.province.title}
+                        </p>
                       </div>
                     ))}
                   </div>
@@ -470,75 +419,24 @@ export default function ApplicantDetailPage() {
               </CardContent>
             </Card>
 
-            {/* Education */}
+            {/* Education - Read Only */}
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    <GraduationCap className="h-5 w-5" />
-                    Education
-                  </CardTitle>
-                  <div className="flex gap-2">
-                    {editingSections.educations ? (
-                      <>
-                        <Button size="sm" onClick={() => handleSectionSave('educations')}>
-                          <Save className="h-4 w-4 mr-1" />
-                          Save
-                        </Button>
-                        <Button size="sm" variant="outline" onClick={() => handleSectionCancel('educations')}>
-                          <X className="h-4 w-4 mr-1" />
-                          Cancel
-                        </Button>
-                      </>
-                    ) : (
-                      <Button size="sm" variant="outline" onClick={() => toggleSectionEdit('educations')}>
-                        <Edit className="h-4 w-4 mr-1" />
-                        Edit
-                      </Button>
-                    )}
-                  </div>
-                </div>
+                <CardTitle className="flex items-center gap-2">
+                  <GraduationCap className="h-5 w-5" />
+                  Education
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 {applicant.educations.length > 0 ? (
                   <div className="space-y-3">
                     {applicant.educations.map((education) => (
                       <div key={education.id} className="p-3 border rounded-lg">
-                        {editingSections.educations ? (
-                          <div className="space-y-3">
-                            <Input
-                              placeholder="Field of Study"
-                              defaultValue={education.field}
-                              className="mb-2"
-                            />
-                            <Input
-                              placeholder="Institution"
-                              defaultValue={education.institution}
-                              className="mb-2"
-                            />
-                            <div className="grid grid-cols-2 gap-2">
-                              <Input
-                                placeholder="Graduation Year"
-                                type="number"
-                                defaultValue={education.graduationYear}
-                              />
-                              <Input
-                                placeholder="GPA"
-                                type="number"
-                                step="0.01"
-                                defaultValue={education.gpa}
-                              />
-                            </div>
-                          </div>
-                        ) : (
-                          <>
-                            <p className="font-medium">{education.field}</p>
-                            <p className="text-sm text-gray-600">{education.institution}</p>
-                            <p className="text-sm text-gray-600">
-                              {education.educationLevel.title} • Graduated {education.graduationYear} • GPA: {education.gpa}
-                            </p>
-                          </>
-                        )}
+                        <p className="font-medium">{education.field}</p>
+                        <p className="text-sm text-gray-600">{education.institution}</p>
+                        <p className="text-sm text-gray-600">
+                          {education.educationLevel.title} • Graduated {education.graduationYear} • GPA: {education.gpa}
+                        </p>
                       </div>
                     ))}
                   </div>
@@ -548,107 +446,32 @@ export default function ApplicantDetailPage() {
               </CardContent>
             </Card>
 
-            {/* Work Experience */}
+            {/* Work Experience - Read Only */}
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    <Briefcase className="h-5 w-5" />
-                    Work Experience
-                  </CardTitle>
-                  <div className="flex gap-2">
-                    {editingSections.workExperiences ? (
-                      <>
-                        <Button size="sm" onClick={() => handleSectionSave('workExperiences')}>
-                          <Save className="h-4 w-4 mr-1" />
-                          Save
-                        </Button>
-                        <Button size="sm" variant="outline" onClick={() => handleSectionCancel('workExperiences')}>
-                          <X className="h-4 w-4 mr-1" />
-                          Cancel
-                        </Button>
-                      </>
-                    ) : (
-                      <Button size="sm" variant="outline" onClick={() => toggleSectionEdit('workExperiences')}>
-                        <Edit className="h-4 w-4 mr-1" />
-                        Edit
-                      </Button>
-                    )}
-                  </div>
-                </div>
+                <CardTitle className="flex items-center gap-2">
+                  <Briefcase className="h-5 w-5" />
+                  Work Experience
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 {applicant.workExperiences.length > 0 ? (
                   <div className="space-y-3">
                     {applicant.workExperiences.map((experience) => (
                       <div key={experience.id} className="p-3 border rounded-lg">
-                        {editingSections.workExperiences ? (
-                          <div className="space-y-3">
-                            <div className="flex items-center justify-between">
-                              <Input
-                                placeholder="Position"
-                                defaultValue={experience.position}
-                                className="flex-1 mr-2"
-                              />
-                              <div className="flex items-center gap-2">
-                                <input
-                                  type="checkbox"
-                                  defaultChecked={experience.currentPosition}
-                                  className="mr-1"
-                                />
-                                <span className="text-sm">Current</span>
-                              </div>
-                            </div>
-                            <Input
-                              placeholder="Company"
-                              defaultValue={experience.company}
-                              className="mb-2"
-                            />
-                            <div className="grid grid-cols-2 gap-2">
-                              <Input
-                                placeholder="Start Date"
-                                type="date"
-                                defaultValue={experience.startDate ? new Date(experience.startDate).toISOString().split('T')[0] : ''}
-                              />
-                              <Input
-                                placeholder="End Date"
-                                type="date"
-                                defaultValue={experience.endDate ? new Date(experience.endDate).toISOString().split('T')[0] : ''}
-                                disabled={experience.currentPosition}
-                              />
-                            </div>
-                            <textarea
-                              placeholder="Description"
-                              defaultValue={experience.description}
-                              className="w-full p-2 border rounded-md resize-none"
-                              rows={3}
-                            />
-                          </div>
-                        ) : (
-                          <>
-                            <div className="flex items-center justify-between">
-                              <p className="font-medium">{experience.position}</p>
-                              {experience.currentPosition && (
-                                <Badge variant="secondary">Current</Badge>
-                              )}
-                            </div>
-                            <p className="text-sm text-gray-600">{experience.company}</p>
-                            <p className="text-sm text-gray-600">
-                              {(() => {
-                                try {
-                                  const startDate = new Date(experience.startDate)
-                                  const endDate = experience.endDate ? new Date(experience.endDate) : null
-                                  const startStr = startDate.getTime() > 0 ? startDate.toLocaleDateString() : 'Invalid Date'
-                                  const endStr = endDate && endDate.getTime() > 0 ? endDate.toLocaleDateString() : (experience.endDate ? 'Invalid Date' : 'Present')
-                                  return `${startStr} - ${endStr}`
-                                } catch {
-                                  return 'Invalid Date - Present'
-                                }
-                              })()} 
-                            </p>
-                            <p className="text-sm mt-2">{experience.description}</p>
-                          </>
-                        )}
+                        <div className="flex items-center justify-between">
+                          <p className="font-medium">{experience.position}</p>
+                          {experience.currentPosition && (
+                            <Badge variant="secondary">Current</Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-600">{experience.company}</p>
+                        <p className="text-sm text-gray-600">
+                          {formatDateForDisplay(experience.startDate)} - {
+                            experience.endDate ? formatDateForDisplay(experience.endDate) : 'Present'
+                          }
+                        </p>
+                        <p className="text-sm mt-2">{experience.description}</p>
                       </div>
                     ))}
                   </div>
@@ -658,67 +481,22 @@ export default function ApplicantDetailPage() {
               </CardContent>
             </Card>
 
-            {/* Trainings */}
+            {/* Trainings - Read Only */}
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    <FileText className="h-5 w-5" />
-                    Trainings
-                  </CardTitle>
-                  <div className="flex gap-2">
-                    {editingSections.trainings ? (
-                      <>
-                        <Button size="sm" onClick={() => handleSectionSave('trainings')}>
-                          <Save className="h-4 w-4 mr-1" />
-                          Save
-                        </Button>
-                        <Button size="sm" variant="outline" onClick={() => handleSectionCancel('trainings')}>
-                          <X className="h-4 w-4 mr-1" />
-                          Cancel
-                        </Button>
-                      </>
-                    ) : (
-                      <Button size="sm" variant="outline" onClick={() => toggleSectionEdit('trainings')}>
-                        <Edit className="h-4 w-4 mr-1" />
-                        Edit
-                      </Button>
-                    )}
-                  </div>
-                </div>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Trainings
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 {applicant.trainings.length > 0 ? (
                   <div className="space-y-3">
                     {applicant.trainings.map((training) => (
                       <div key={training.id} className="p-3 border rounded-lg">
-                        {editingSections.trainings ? (
-                          <div className="space-y-3">
-                            <Input
-                              placeholder="Training Title"
-                              defaultValue={training.title}
-                              className="mb-2"
-                            />
-                            <Input
-                              placeholder="Training Year"
-                              type="number"
-                              defaultValue={training.trainingYear}
-                              className="mb-2"
-                            />
-                            <textarea
-                              placeholder="Description"
-                              defaultValue={training.description}
-                              className="w-full p-2 border rounded-md resize-none"
-                              rows={3}
-                            />
-                          </div>
-                        ) : (
-                          <>
-                            <p className="font-medium">{training.title}</p>
-                            <p className="text-sm text-gray-600">Year: {training.trainingYear}</p>
-                            <p className="text-sm mt-2">{training.description}</p>
-                          </>
-                        )}
+                        <p className="font-medium">{training.title}</p>
+                        <p className="text-sm text-gray-600">Year: {training.trainingYear}</p>
+                        <p className="text-sm mt-2">{training.description}</p>
                       </div>
                     ))}
                   </div>
@@ -728,76 +506,24 @@ export default function ApplicantDetailPage() {
               </CardContent>
             </Card>
 
-            {/* Documents */}
+            {/* Documents - Read Only */}
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    <FileText className="h-5 w-5" />
-                    Documents
-                  </CardTitle>
-                  <div className="flex gap-2">
-                    {editingSections.documents ? (
-                      <>
-                        <Button size="sm" onClick={() => handleSectionSave('documents')}>
-                          <Save className="h-4 w-4 mr-1" />
-                          Save
-                        </Button>
-                        <Button size="sm" variant="outline" onClick={() => handleSectionCancel('documents')}>
-                          <X className="h-4 w-4 mr-1" />
-                          Cancel
-                        </Button>
-                      </>
-                    ) : (
-                      <Button size="sm" variant="outline" onClick={() => toggleSectionEdit('documents')}>
-                        <Edit className="h-4 w-4 mr-1" />
-                        Edit
-                      </Button>
-                    )}
-                  </div>
-                </div>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Documents
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 {applicant.documents.length > 0 ? (
                   <div className="space-y-3">
                     {applicant.documents.map((document) => (
                       <div key={document.id} className="p-3 border rounded-lg">
-                        {editingSections.documents ? (
-                          <div className="space-y-3">
-                            <Input
-                              placeholder="Description"
-                              defaultValue={document.description}
-                              className="mb-2"
-                            />
-                            <Select defaultValue={document.documentType}>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Document Type" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="RESUME">Resume</SelectItem>
-                                <SelectItem value="COVER_LETTER">Cover Letter</SelectItem>
-                                <SelectItem value="TRANSCRIPT">Transcript</SelectItem>
-                                <SelectItem value="PORTFOLIO">Portfolio</SelectItem>
-                                <SelectItem value="CERTIFICATE">Certificate</SelectItem>
-                                <SelectItem value="OTHER">Other</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <Input
-                              placeholder="File Path"
-                              defaultValue={document.filePath}
-                              readOnly
-                              className="bg-gray-50"
-                            />
-                          </div>
-                        ) : (
-                          <>
-                            <div className="flex items-center justify-between">
-                              <p className="font-medium">{document.description}</p>
-                              <Badge variant="outline">{document.documentType}</Badge>
-                            </div>
-                            <p className="text-sm text-gray-600">{document.filePath}</p>
-                          </>
-                        )}
+                        <div className="flex items-center justify-between">
+                          <p className="font-medium">{document.description}</p>
+                          <Badge variant="outline">{document.documentType}</Badge>
+                        </div>
+                        <p className="text-sm text-gray-600">{document.filePath}</p>
                       </div>
                     ))}
                   </div>
@@ -810,44 +536,19 @@ export default function ApplicantDetailPage() {
 
           {/* Right Column */}
           <div className="space-y-6">
-            {/* Job Types */}
+            {/* Job Types - Editable */}
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    <Briefcase className="h-5 w-5" />
-                    Job Types
-                  </CardTitle>
-                  <div className="flex gap-2">
-                    {editingSections.jobTypes ? (
-                      <>
-                        <Button 
-                          size="sm" 
-                          onClick={() => handleSectionSave('jobTypes')}
-                          disabled={updateJobTypesMutation.isPending}
-                        >
-                          <Save className="h-4 w-4 mr-1" />
-                          {updateJobTypesMutation.isPending ? 'Saving...' : 'Save'}
-                        </Button>
-                        <Button size="sm" variant="outline" onClick={() => handleSectionCancel('jobTypes')}>
-                          <X className="h-4 w-4 mr-1" />
-                          Cancel
-                        </Button>
-                      </>
-                    ) : (
-                      <Button size="sm" variant="outline" onClick={() => toggleSectionEdit('jobTypes')}>
-                        <Edit className="h-4 w-4 mr-1" />
-                        Edit
-                      </Button>
-                    )}
-                  </div>
-                </div>
+                <CardTitle className="flex items-center gap-2">
+                  <Briefcase className="h-5 w-5" />
+                  Job Types
+                </CardTitle>
                 <CardDescription>
                   Job types and categories this applicant is interested in
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {editingSections.jobTypes ? (
+                {isEditing ? (
                   <div className="space-y-4">
                     {jobTypesLoading ? (
                       <p className="text-gray-500">Loading job types...</p>
@@ -903,7 +604,7 @@ export default function ApplicantDetailPage() {
               </CardContent>
             </Card>
 
-            {/* Applied Positions */}
+            {/* Applied Positions - Read Only */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -932,14 +633,7 @@ export default function ApplicantDetailPage() {
                           {application.position.company.title} • {application.position.company.city}, {application.position.company.country}
                         </p>
                         <p className="text-sm text-gray-500 mb-3">
-                          Applied: {(() => {
-                            try {
-                              const date = new Date(application.appliedAt)
-                              return date.getTime() > 0 ? date.toLocaleDateString() : 'Unknown Date'
-                            } catch {
-                              return 'Unknown Date'
-                            }
-                          })()}
+                          Applied: {formatDateForDisplay(application.appliedAt)}
                         </p>
                         <p className="text-sm text-gray-700">
                           {application.position.jobDescription}
@@ -953,7 +647,7 @@ export default function ApplicantDetailPage() {
               </CardContent>
             </Card>
 
-            {/* Social Media */}
+            {/* Social Media - Read Only */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">

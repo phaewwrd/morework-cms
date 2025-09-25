@@ -62,7 +62,6 @@ declare namespace __next_route_internal_types__ {
     | `/admin/moreworks/applicant/${SafeSlug<T>}`
     | `/api/applicants/${SafeSlug<T>}`
     | `/api/applicants/${SafeSlug<T>}/addresses`
-    | `/api/applicants/${SafeSlug<T>}/addresses/${SafeSlug<T>}`
     | `/api/applicants/${SafeSlug<T>}/documents`
     | `/api/applicants/${SafeSlug<T>}/educations`
     | `/api/applicants/${SafeSlug<T>}/job-types`

@@ -6,11 +6,6 @@
       "static/css/app/layout.css",
       "static/chunks/app/layout.js"
     ],
-    "/admin/moreworks/applicant/[id]/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/admin/moreworks/applicant/[id]/page.js"
-    ],
     "/api/job-types/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -20,6 +15,21 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/applicants/[id]/route.js"
+    ],
+    "/admin/moreworks/applicant/[id]/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/admin/moreworks/applicant/[id]/page.js"
+    ],
+    "/admin/moreworks/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/admin/moreworks/page.js"
+    ],
+    "/api/applicants/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/applicants/route.js"
     ]
   }
 }

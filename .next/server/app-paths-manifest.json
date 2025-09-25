@@ -1,5 +1,6 @@
 {
   "/api/job-types/route": "app/api/job-types/route.js",
   "/api/applicants/[id]/route": "app/api/applicants/[id]/route.js",
-  "/admin/moreworks/applicant/[id]/page": "app/admin/moreworks/applicant/[id]/page.js"
+  "/admin/moreworks/applicant/[id]/page": "app/admin/moreworks/applicant/[id]/page.js",
+  "/admin/moreworks/page": "app/admin/moreworks/page.js"
 }
