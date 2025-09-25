@@ -101,6 +101,67 @@ export async function POST(
   }
 }
 
+// Update all job types for applicant (replace existing with new ones)
+export async function PUT(
+  request: NextRequest,
+  { params }: RouteParams
+): Promise<NextResponse<ApiResponse>> {
+  try {
+    const user = await getAuthUserAsync(request)
+    if (!user) {
+      return createErrorResponse(ERROR_MESSAGES.UNAUTHORIZED, 401, 'UNAUTHORIZED')
+    }
+
+    const { id } = await params
+    const applicantId = parseInt(id)
+
+    if (isNaN(applicantId)) {
+      return createErrorResponse('Invalid applicant ID', 400, 'INVALID_ID')
+    }
+
+    const body = await request.json()
+    const { jobTypeIds } = body
+
+    if (!Array.isArray(jobTypeIds)) {
+      return createErrorResponse('Job type IDs must be an array', 400, 'INVALID_JOB_TYPE_IDS')
+    }
+
+    // Validate all job type IDs
+    const validJobTypeIds = jobTypeIds.filter(id => !isNaN(parseInt(id))).map(id => parseInt(id))
+
+    // Delete existing associations
+    await prisma.applicantsJobType.deleteMany({
+      where: {
+        applicantId: applicantId
+      }
+    })
+
+    // Create new associations
+    if (validJobTypeIds.length > 0) {
+      await prisma.applicantsJobType.createMany({
+        data: validJobTypeIds.map(jobTypeId => ({
+          applicantId: applicantId,
+          jobTypeId: jobTypeId
+        }))
+      })
+    }
+
+    // Fetch updated job types with related data
+    const updatedJobTypes = await prisma.applicantsJobType.findMany({
+      where: {
+        applicantId: applicantId
+      },
+      include: {
+        jobType: true
+      }
+    })
+
+    return createSuccessResponse(updatedJobTypes, 'Job types updated successfully')
+  } catch (error) {
+    return handleApiError(error, 'Applicant Job Types PUT')
+  }
+}
+
 // Remove job type from applicant
 export async function DELETE(
   request: NextRequest,

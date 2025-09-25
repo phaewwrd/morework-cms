@@ -1,13 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthUserAsync } from '@/lib/jwt'
 import { prisma } from '@/lib/prisma'
-import { 
-  handleApiError, 
-  createErrorResponse, 
-  createSuccessResponse, 
-  ERROR_MESSAGES,
-  type ApiResponse 
-} from '@/lib/api-errors'
+import { z } from 'zod'
 
 interface RouteParams {
   params: Promise<{
@@ -15,36 +9,60 @@ interface RouteParams {
   }>
 }
 
-export async function POST(
+const addressUpdateSchema = z.object({
+  addresses: z.array(z.object({
+    id: z.number().optional(),
+    address: z.string().min(1, 'Address is required'),
+    districtId: z.number().int().positive('Invalid district ID'),
+  }))
+})
+
+// Update applicant addresses
+export async function PUT(
   request: NextRequest,
   { params }: RouteParams
-): Promise<NextResponse<ApiResponse>> {
+): Promise<NextResponse> {
   try {
     const user = await getAuthUserAsync(request)
     if (!user) {
-      return createErrorResponse(ERROR_MESSAGES.UNAUTHORIZED, 401, 'UNAUTHORIZED')
+      return NextResponse.json({
+        success: false,
+        message: 'Authentication required',
+        error: 'Please login to update addresses'
+      }, { status: 401 })
     }
 
     const { id } = await params
     const applicantId = parseInt(id)
 
     if (isNaN(applicantId)) {
-      return createErrorResponse('Invalid applicant ID', 400, 'INVALID_ID')
+      return NextResponse.json({
+        success: false,
+        message: 'Invalid applicant ID',
+        error: 'Applicant ID must be a number'
+      }, { status: 400 })
     }
 
     const body = await request.json()
-    const { address, districtId } = body
+    const validatedData = addressUpdateSchema.parse(body)
 
-    if (!address || !districtId) {
-      return createErrorResponse('Address and district ID are required', 400, 'MISSING_FIELDS')
-    }
+    // Delete existing addresses
+    await prisma.applicantAddress.deleteMany({
+      where: { applicantId }
+    })
 
-    const newAddress = await prisma.applicantAddress.create({
-      data: {
-        address,
-        districtId: parseInt(districtId),
-        applicantId
-      },
+    // Create new addresses
+    const createdAddresses = await prisma.applicantAddress.createMany({
+      data: validatedData.addresses.map(addr => ({
+        applicantId,
+        address: addr.address,
+        districtId: addr.districtId
+      }))
+    })
+
+    // Fetch the updated addresses with related data
+    const updatedAddresses = await prisma.applicantAddress.findMany({
+      where: { applicantId },
       include: {
         district: {
           include: {
@@ -54,9 +72,27 @@ export async function POST(
       }
     })
 
-    return createSuccessResponse(newAddress, 'Address created successfully', 201)
+    return NextResponse.json({
+      success: true,
+      message: 'Addresses updated successfully',
+      data: updatedAddresses
+    })
 
   } catch (error) {
-    return handleApiError(error, 'Applicant Address POST')
+    console.error('Update addresses error:', error)
+
+    if (error instanceof Error && error.name === 'ZodError') {
+      return NextResponse.json({
+        success: false,
+        message: 'Validation failed',
+        error: error.message
+      }, { status: 400 })
+    }
+
+    return NextResponse.json({
+      success: false,
+      message: 'Failed to update addresses',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 })
   }
 }

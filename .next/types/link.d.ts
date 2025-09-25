@@ -57,7 +57,11 @@ declare namespace __next_route_internal_types__ {
     | `/api/applicants/${SafeSlug<T>}`
     | `/api/applicants/${SafeSlug<T>}/addresses`
     | `/api/applicants/${SafeSlug<T>}/addresses/${SafeSlug<T>}`
+    | `/api/applicants/${SafeSlug<T>}/documents`
+    | `/api/applicants/${SafeSlug<T>}/educations`
     | `/api/applicants/${SafeSlug<T>}/job-types`
+    | `/api/applicants/${SafeSlug<T>}/trainings`
+    | `/api/applicants/${SafeSlug<T>}/work-experiences`
     | `/api/applications/${SafeSlug<T>}`
     | `/api/positions/${SafeSlug<T>}`
     | `/dashboard/companies/${SafeSlug<T>}`
