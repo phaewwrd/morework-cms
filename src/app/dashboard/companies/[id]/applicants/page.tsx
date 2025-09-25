@@ -1,13 +1,14 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
+import { useSearchParams, useParams, useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { ArrowLeft, Users, Eye, Mail, Phone, Calendar, Briefcase, Loader2, XCircle } from 'lucide-react'
+import { ArrowLeft, Users, Eye, Mail, Phone, Calendar, Briefcase, Loader2, XCircle, LogOut } from 'lucide-react'
 import { useCompanyApplicants } from '@/hooks/use-companies'
 import { usePositions } from '@/hooks/use-positions'
 import { useUpdateApplicationStatus } from '@/hooks/use-applications'
@@ -35,6 +36,19 @@ export default function AllApplicantsPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [jobFilter, setJobFilter] = useState('')
+  
+  const searchParams = useSearchParams()
+  const params = useParams()
+  const router = useRouter()
+  const hashedCompanyId = params.id as string
+
+  // Set job filter from URL parameter when component mounts
+  useEffect(() => {
+    const positionId = searchParams.get('position')
+    if (positionId) {
+      setJobFilter(positionId)
+    }
+  }, [searchParams])
 
   // Fetch applicants using TanStack Query
   const { 
@@ -85,6 +99,22 @@ export default function AllApplicantsPage() {
     })
   }
 
+  const handleSignOut = async () => {
+    try {
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+      })
+      
+      if (response.ok) {
+        router.push('/auth/login')
+      } else {
+        console.error('Failed to sign out')
+      }
+    } catch (error) {
+      console.error('Error signing out:', error)
+    }
+  }
+
   // Handle loading state
   if (applicantsLoading) {
     return (
@@ -121,23 +151,65 @@ export default function AllApplicantsPage() {
 
   return (
     <div className="container mx-auto p-6 max-w-7xl">
+      {/* Top Navigation Bar */}
+      <div className="flex items-center justify-between mb-6 p-4 border-b">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <Users className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <h2 className="font-semibold text-lg">Company Dashboard</h2>
+              <p className="text-sm text-muted-foreground">Applicants</p>
+            </div>
+          </div>
+        </div>
+        <Button 
+          variant="outline" 
+          onClick={handleSignOut}
+          className="flex items-center gap-2"
+        >
+          <LogOut className="h-4 w-4" />
+          Sign Out
+        </Button>
+      </div>
+
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-4 mb-4">
           <Button asChild variant="ghost" size="sm">
-            <Link href={"/dashboard/companies" as any}>
+            <Link href={`/dashboard/companies/${hashedCompanyId}` as any}>
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Dashboard
             </Link>
           </Button>
+          {jobFilter && (
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setJobFilter('')}
+            >
+              Clear Position Filter
+            </Button>
+          )}
         </div>
         <div className="flex items-center gap-3">
           <div className="p-2 bg-primary/10 rounded-lg">
             <Users className="h-6 w-6 text-primary" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">All Applicants</h1>
-            <p className="text-muted-foreground">Review and manage all applications to your job postings</p>
+            <h1 className="text-3xl font-bold tracking-tight">
+              {jobFilter && positionsResponse?.data ? 
+                `Applicants for ${positionsResponse.data.find((p: any) => p.id.toString() === jobFilter)?.title || 'Position'}` :
+                'All Applicants'
+              }
+            </h1>
+            <p className="text-muted-foreground">
+              {jobFilter ? 
+                'Review and manage applications for this specific position' :
+                'Review and manage all applications to your job postings'
+              }
+            </p>
           </div>
         </div>
       </div>

@@ -1,60 +1,25 @@
 {
   "pages": {
+    "/api/job-types/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/job-types/route.js"
+    ],
+    "/api/applicants/[id]/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/applicants/[id]/route.js"
+    ],
+    "/api/applicants/[id]/job-types/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/applicants/[id]/job-types/route.js"
+    ],
     "/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/css/app/layout.css",
       "static/chunks/app/layout.js"
-    ],
-    "/auth/login/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/auth/login/page.js"
-    ],
-    "/api/auth/login/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/auth/login/route.js"
-    ],
-    "/dashboard/companies/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/companies/page.js"
-    ],
-    "/api/auth/me/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/auth/me/route.js"
-    ],
-    "/api/companies/me/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/companies/me/route.js"
-    ],
-    "/dashboard/companies/[id]/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/companies/[id]/page.js"
-    ],
-    "/api/positions/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/positions/route.js"
-    ],
-    "/dashboard/companies/[id]/applicants/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/companies/[id]/applicants/page.js"
-    ],
-    "/api/companies/applicants/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/companies/applicants/route.js"
-    ],
-    "/dashboard/companies/[id]/create-job/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/companies/[id]/create-job/page.js"
     ],
     "/admin/moreworks/page": [
       "static/chunks/webpack.js",
@@ -66,10 +31,10 @@
       "static/chunks/main-app.js",
       "static/chunks/app/api/applicants/route.js"
     ],
-    "/api/positions/[id]/route": [
+    "/admin/moreworks/applicant/[id]/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/api/positions/[id]/route.js"
+      "static/chunks/app/admin/moreworks/applicant/[id]/page.js"
     ],
     "/admin/companies/page": [
       "static/chunks/webpack.js",
@@ -81,10 +46,30 @@
       "static/chunks/main-app.js",
       "static/chunks/app/api/companies/route.js"
     ],
-    "/_not-found/page": [
+    "/api/positions/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/_not-found/page.js"
+      "static/chunks/app/api/positions/route.js"
+    ],
+    "/api/companies/me/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/companies/me/route.js"
+    ],
+    "/api/auth/logout/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/auth/logout/route.js"
+    ],
+    "/auth/login/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/auth/login/page.js"
+    ],
+    "/api/auth/login/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/auth/login/route.js"
     ]
   }
 }

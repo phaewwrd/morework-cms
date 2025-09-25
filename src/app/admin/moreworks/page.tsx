@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { toast } from '@/hooks/use-toast'
+import AdminNavbar from '@/components/AdminNavbar'
 
 interface Applicant {
   id: number
@@ -23,7 +24,6 @@ interface Applicant {
   experience: number
   expectedSalary: number
   currentlyEmployed: boolean
-  applicationStatus: 'PENDING' | 'ACCEPTED' | 'REJECTED'
   positions?: Array<{
     id: number
     title: string
@@ -90,17 +90,27 @@ export default function MoreWorksPage() {
     const stats = applicantData.reduce(
       (acc, applicant) => {
         acc.total += 1
-        switch (applicant.applicationStatus) {
-          case 'ACCEPTED':
+        
+        // Check if applicant has any positions and get their statuses
+        if (applicant.positions && applicant.positions.length > 0) {
+          // Count status from all applications, but avoid double counting the same applicant
+          const hasAccepted = applicant.positions.some(pos => pos.applicationStatus === 'ACCEPTED')
+          const hasPending = applicant.positions.some(pos => pos.applicationStatus === 'PENDING')
+          const hasRejected = applicant.positions.some(pos => pos.applicationStatus === 'REJECTED')
+          
+          // Prioritize status: ACCEPTED > PENDING > REJECTED
+          if (hasAccepted) {
             acc.accepted += 1
-            break
-          case 'PENDING':
+          } else if (hasPending) {
             acc.pending += 1
-            break
-          case 'REJECTED':
+          } else if (hasRejected) {
             acc.rejected += 1
-            break
+          }
+        } else {
+          // If no positions, consider as pending (no applications yet)
+          acc.pending += 1
         }
+        
         return acc
       },
       { total: 0, accepted: 0, pending: 0, rejected: 0 }
@@ -112,8 +122,20 @@ export default function MoreWorksPage() {
     const matchesSearch = 
       applicant.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       applicant.lastName.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesGender = genderFilter === '' || applicant.gender === genderFilter
-    const matchesStatus = statusFilter === '' || applicant.applicationStatus === statusFilter
+    const matchesGender = genderFilter === '' || genderFilter === 'ALL' || applicant.gender === genderFilter
+    
+    // Handle status filtering based on applicant's positions
+    let matchesStatus = true
+    if (statusFilter !== '' && statusFilter !== 'ALL') {
+      if (applicant.positions && applicant.positions.length > 0) {
+        // Check if any of the applicant's positions match the filter status
+        const hasStatusMatch = applicant.positions.some(pos => pos.applicationStatus === statusFilter)
+        matchesStatus = hasStatusMatch
+      } else {
+        // If no positions, consider as pending
+        matchesStatus = statusFilter === 'PENDING'
+      }
+    }
     
     return matchesSearch && matchesGender && matchesStatus
   })
@@ -133,11 +155,13 @@ export default function MoreWorksPage() {
   }
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">MoreWorks Dashboard</h1>
-        <p className="text-muted-foreground">Manage workers and applicants</p>
-      </div>
+    <>
+      <AdminNavbar />
+      <div className="container mx-auto p-6">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold tracking-tight">MoreWorks Dashboard</h1>
+          <p className="text-muted-foreground">Manage workers and applicants</p>
+        </div>
 
       {/* Statistics Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
@@ -288,13 +312,7 @@ export default function MoreWorksPage() {
                     </div>
                   </div>
                   <div className="flex flex-col gap-2 ml-4">
-                    <div className={`px-2 py-1 rounded text-xs font-medium text-center ${
-                      applicant.applicationStatus === 'ACCEPTED' ? 'bg-green-100 text-green-800' :
-                      applicant.applicationStatus === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-red-100 text-red-800'
-                    }`}>
-                      {applicant.applicationStatus}
-                    </div>
+            
                     <div className="flex gap-1">
                       <Button
                         size="sm"
@@ -312,6 +330,7 @@ export default function MoreWorksPage() {
           )}
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </>
   )
 }

@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { userRegisterSchema, type ApiResponse } from '@/lib/validations'
+import { userRegisterSchema } from '@/lib/validations'
 import { hashPassword } from '@/lib/auth'
 import { generateToken, setAuthCookie } from '@/lib/jwt'
 import { prisma } from '@/lib/prisma'
+import { 
+  handleApiError, 
+  createErrorResponse, 
+  createSuccessResponse, 
+  ERROR_MESSAGES,
+  type ApiResponse 
+} from '@/lib/api-errors'
 
 export async function POST(request: NextRequest): Promise<NextResponse<ApiResponse>> {
   try {
@@ -17,14 +24,10 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
     })
     
     if (existingUser) {
-      return NextResponse.json({
-        success: false,
-        message: 'User already exists',
-        error: 'A user with this email already exists'
-      }, { status: 409 })
+      return createErrorResponse(ERROR_MESSAGES.DUPLICATE_EMAIL, 409, 'DUPLICATE_EMAIL')
     }
     
-        // Hash password
+    // Hash password
     const hashedPassword = await hashPassword(validatedData.password)
     
     // Create user - let Prisma handle auto-increment ID
@@ -35,7 +38,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
         role: validatedData.role || 'company',
         password: hashedPassword,
         image: null,
-      }
+      } as any // Type assertion to work around Prisma type issues
     })
     
     // Generate JWT token
@@ -57,27 +60,9 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
       createdAt: user.createdAt,
     }
     
-    return NextResponse.json({
-      success: true,
-      message: 'User registered successfully',
-      data: userData
-    }, { status: 201 })
+    return createSuccessResponse(userData, 'User registered successfully', 201)
     
   } catch (error) {
-    console.error('Registration error:', error)
-    
-    if (error instanceof Error && error.name === 'ZodError') {
-      return NextResponse.json({
-        success: false,
-        message: 'Validation failed',
-        error: error.message
-      }, { status: 400 })
-    }
-    
-    return NextResponse.json({
-      success: false,
-      message: 'Registration failed',
-      error: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 })
+    return handleApiError(error, 'Auth Register')
   }
 }

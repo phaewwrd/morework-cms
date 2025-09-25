@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { toast } from '@/hooks/use-toast'
+import AdminNavbar from '@/components/AdminNavbar'
 
 interface Applicant {
   id: number
@@ -144,11 +145,13 @@ export default function AdminApplicantsPage() {
   }
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard - Applicants</h1>
-        <p className="text-muted-foreground">Manage all job applicants and their applications</p>
-      </div>
+    <>
+      <AdminNavbar />
+      <div className="container mx-auto p-6">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard - Applicants</h1>
+          <p className="text-muted-foreground">Manage all job applicants and their applications</p>
+        </div>
 
       {/* Statistics Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7 mb-8">
@@ -357,6 +360,7 @@ export default function AdminApplicantsPage() {
           )}
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </>
   )
 }

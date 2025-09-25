@@ -113,51 +113,159 @@ export async function GET(
       }
 
       // Transform the data to match frontend expectations
-      const transformedApplicant = {
-        id: applicant.id,
-        firstName: applicant.firstName,
-        lastName: applicant.lastName,
-        email: applicant.email,
-        phone: applicant.phone,
-        experience: applicant.workExperiences.length > 0 
-          ? applicant.workExperiences.reduce((total, exp) => {
-              const startYear = new Date(exp.startDate).getFullYear()
-              const endYear = exp.endDate ? new Date(exp.endDate).getFullYear() : new Date().getFullYear()
-              return total + (endYear - startYear)
-            }, 0)
-          : 0,
-        expectedSalary: null, // This field doesn't exist in the current schema
-        skills: applicant.workExperiences.map(exp => exp.description).join('; '),
-        education: applicant.educations.map(edu => 
-          `${edu.field} at ${edu.institution} (${edu.graduationYear})`
-        ).join('; '),
-        applications: applicant.positions.map(pos => ({
-          id: pos.id,
-          status: pos.status,
-          appliedAt: pos.appliedAt.toISOString(),
-          coverLetter: applicant.documents.find(doc => doc.documentType === 'COVER_LETTER')?.description || null,
-          resumeUrl: applicant.documents.find(doc => doc.documentType === 'RESUME')?.filePath || null,
-          position: {
-            id: pos.position.id,
-            title: pos.position.title,
-            description: pos.position.jobDescription
-          }
-        }))
-      }
+    //   const transformedApplicant = {
+    //     id: applicant.id,
+    //     firstName: applicant.firstName,
+    //     lastName: applicant.lastName,
+    //     email: applicant.email,
+    //     phone: applicant.phone,
+    //     experience: applicant.workExperiences.length > 0 
+    //       ? applicant.workExperiences.reduce((total, exp) => {
+    //           const startYear = new Date(exp.startDate).getFullYear()
+    //           const endYear = exp.endDate ? new Date(exp.endDate).getFullYear() : new Date().getFullYear()
+    //           return total + (endYear - startYear)
+    //         }, 0)
+    //       : 0,
+    //     expectedSalary: null, // This field doesn't exist in the current schema
+    //     skills: applicant.workExperiences.map(exp => exp.description).join('; '),
+    //     education: applicant.educations.map(edu => 
+    //       `${edu.field} at ${edu.institution} (${edu.graduationYear})`
+    //     ).join('; '),
+    //     applications: applicant.positions.map(pos => ({
+    //       id: pos.id,
+    //       status: pos.status,
+    //       appliedAt: pos.appliedAt.toISOString(),
+    //       coverLetter: applicant.documents.find(doc => doc.documentType === 'COVER_LETTER')?.description || null,
+    //       resumeUrl: applicant.documents.find(doc => doc.documentType === 'RESUME')?.filePath || null,
+    //       position: {
+    //         id: pos.position.id,
+    //         title: pos.position.title,
+    //         description: pos.position.jobDescription
+    //       }
+    //     }))
+    //   }
 
       return NextResponse.json({
         success: true,
         message: 'Applicant retrieved successfully',
-        data: transformedApplicant
+        data: applicant
       })
     }
 
-    // Default behavior for non-company users
-    const applicant = await prisma.applicant.findUnique({
-      where: { id: applicantId },
-    })
+    // Default behavior for admin users - get full applicant data with all relationships
+    // Use raw query to handle invalid datetime values
+    const applicantResult = await prisma.$queryRaw`
+      SELECT 
+        a.*,
+        CASE 
+          WHEN a.birth_date = '0000-00-00' OR a.birth_date IS NULL THEN '1970-01-01'
+          ELSE a.birth_date 
+        END as birth_date,
+        CASE 
+          WHEN a.start_working_date = '0000-00-00' OR a.start_working_date IS NULL THEN '1970-01-01'
+          ELSE a.start_working_date 
+        END as start_working_date
+      FROM applicants a 
+      WHERE a.id = ${applicantId}
+      LIMIT 1
+    ` as any[]
 
-    if (!applicant) {
+    if (!applicantResult || applicantResult.length === 0) {
+      return NextResponse.json({
+        success: false,
+        message: 'Applicant not found',
+        error: 'No applicant found with the given ID'
+      }, { status: 404 })
+    }
+
+    const applicantData = applicantResult[0]
+
+    // Get related data separately to avoid datetime issues
+    const [addresses, educations, workExperiencesResult, trainings, documents, positions, socialMedia, jobTypes] = await Promise.all([
+      // Addresses
+      prisma.applicantAddress.findMany({
+        where: { applicantId },
+        include: {
+          district: {
+            include: {
+              province: true
+            }
+          }
+        }
+      }),
+      // Educations
+      prisma.applicantEducation.findMany({
+        where: { applicantId },
+        include: {
+          educationLevel: true
+        }
+      }),
+      // Work Experiences - handle datetime issues
+      prisma.$queryRaw`
+        SELECT 
+          we.*,
+          CASE 
+            WHEN we.start_date = '0000-00-00' OR we.start_date IS NULL THEN '1970-01-01'
+            ELSE we.start_date 
+          END as start_date,
+          CASE 
+            WHEN we.end_date = '0000-00-00' THEN NULL
+            ELSE we.end_date 
+          END as end_date
+        FROM applicant_work_experiences we 
+        WHERE we.applicant_id = ${applicantId}
+      `,
+      // Trainings
+      prisma.applicantTraining.findMany({
+        where: { applicantId }
+      }),
+      // Documents
+      prisma.applicantDocument.findMany({
+        where: { applicantId }
+      }),
+      // Positions
+      prisma.applicantPosition.findMany({
+        where: { applicantId },
+        include: {
+          position: {
+            include: {
+              company: true
+            }
+          }
+        }
+      }),
+      // Social Media
+      prisma.socialMedia.findMany({
+        where: { applicantId }
+      }),
+      // Job Types
+      prisma.applicantsJobType.findMany({
+        where: {
+          applicantId: applicantId
+        },
+        include: {
+          jobType: true
+        }
+      })
+    ])
+
+    // Convert work experiences result to proper array
+    const workExperiences = workExperiencesResult as any[]
+
+    // Combine all data
+    const applicantWithJobTypes = {
+      ...applicantData,
+      addresses,
+      educations,
+      workExperiences,
+      trainings,
+      documents,
+      positions,
+      socialMedia,
+      jobTypes
+    }
+
+    if (!applicantWithJobTypes) {
       return NextResponse.json({
         success: false,
         message: 'Applicant not found',
@@ -168,7 +276,7 @@ export async function GET(
     return NextResponse.json({
       success: true,
       message: 'Applicant retrieved successfully',
-      data: applicant
+      data: applicantWithJobTypes
     })
     
   } catch (error) {
@@ -217,6 +325,35 @@ export async function PATCH(
     const updatedApplicant = await prisma.applicant.update({
       where: { id: applicantId },
       data: validatedData,
+      include: {
+        addresses: {
+          include: {
+            district: {
+              include: {
+                province: true
+              }
+            }
+          }
+        },
+        educations: {
+          include: {
+            educationLevel: true
+          }
+        },
+        workExperiences: true,
+        trainings: true,
+        documents: true,
+        positions: {
+          include: {
+            position: {
+              include: {
+                company: true
+              }
+            }
+          }
+        },
+        socialMedia: true
+      }
     })
     
     return NextResponse.json({

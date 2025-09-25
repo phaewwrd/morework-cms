@@ -37,36 +37,25 @@ export function middleware(request: NextRequest) {
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))
   const isProtectedApiRoute = protectedApiRoutes.some(route => pathname.startsWith(route))
 
-  // Handle API routes
-
-    // If it's a protected API route and user is not authenticated
-    if (isProtectedApiRoute && !user) {
-      return NextResponse.json(
-        { success: false, message: 'Authentication required', error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-    
-    
-
-  // Handle authentication routes
-//   if (pathname.startsWith('/auth/')) {
-//     // If user is already authenticated, redirect based on role
-//     if (user) {
-//       if (user.role === 'company') {
-//         return NextResponse.redirect(new URL('/dashboard/companies', request.url))
-//       } else if (user.role === 'moreworks') {
-//         return NextResponse.redirect(new URL('/admin', request.url))
-//       }
-//       // Default redirect for other roles
-//       return NextResponse.redirect(new URL('/', request.url))
-//     }
-    
-//     // Allow unauthenticated users to access auth pages
-//     return NextResponse.next()
-//   }
-
-  // Handle protected dashboard routes
+  // Handle protected API routes
+  if (isProtectedApiRoute && !user) {
+    return NextResponse.json(
+      { 
+        success: false, 
+        message: 'Authentication required',
+        code: 'UNAUTHORIZED'
+      },
+      { status: 401 }
+    )
+  }
+  
+  // Handle public routes - redirect authenticated users to appropriate dashboard
+  if (isPublicRoute && user) {
+    const redirectUrl = user.role === 'admin' ? '/admin/companies' : '/dashboard'
+    return NextResponse.redirect(new URL(redirectUrl, request.url))
+  }
+  
+  // Handle protected routes
   if (isProtectedRoute) {
     // If user is not authenticated, redirect to login
     if (!user) {
@@ -75,43 +64,23 @@ export function middleware(request: NextRequest) {
       return NextResponse.redirect(loginUrl)
     }
 
-    // Role-based access control for dashboard routes
-    if (pathname.startsWith('/admin')) {
-        // Redirect to appropriate dashboard based on role
-        if (user.role === 'company') {
-          return NextResponse.redirect(new URL('/dashboard', request.url))
-        }
-        return NextResponse.redirect(new URL('/', request.url))
-      }
-    
-
-    if (pathname.startsWith('/dashboard')) {
-      if (user.role !== 'company' && user.role !== 'admin') {
-        // Redirect to appropriate dashboard based on role
-      
-        return NextResponse.redirect(new URL('/auth/login', request.url))
-      }
-    }
-
+    // Role-based access control
     if (pathname.startsWith('/admin')) {
       if (user.role !== 'admin') {
-        // Redirect to appropriate dashboard based on role
-      
+        // Non-admin users trying to access admin routes
+        const redirectUrl = user.role === 'company' ? '/dashboard/companies' : '/auth/login'
+        return NextResponse.redirect(new URL(redirectUrl, request.url))
+      }
+    }
+
+    if (pathname.startsWith('/dashboard')) {
+      if (user.role !== 'company' ) {
+        // Unauthorized users trying to access dashboard
         return NextResponse.redirect(new URL('/auth/login', request.url))
       }
     }
   }
 
-  
-
-  // Handle root route - redirect authenticated users to appropriate dashboard
-  if (pathname === '/' && user) {
-    if (user.role === 'company') {
-      return NextResponse.redirect(new URL('/dashboard', request.url))
-    } else if (user.role === 'admin') {
-      return NextResponse.redirect(new URL('/admin/moreworks', request.url))
-    }
-  }
 
   // Allow the request to continue
   return NextResponse.next()

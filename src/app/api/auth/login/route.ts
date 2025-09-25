@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { userLoginSchema, type ApiResponse } from '@/lib/validations'
+import { userLoginSchema } from '@/lib/validations'
 import { generateToken, setAuthCookie } from '@/lib/jwt'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
+import { 
+  handleApiError, 
+  createErrorResponse, 
+  createSuccessResponse, 
+  ERROR_MESSAGES,
+  type ApiResponse 
+} from '@/lib/api-errors'
 
 export async function POST(request: NextRequest): Promise<NextResponse<ApiResponse>> {
   try {
@@ -11,7 +18,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
     // Validate request data
     const validatedData = userLoginSchema.parse(body)
     
-    // Find user by email
+    // Find user by email - use include to get all fields including password
     const user = await prisma.user.findUnique({
       where: { email: validatedData.email },
       include: {
@@ -22,34 +29,26 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
           }
         }
       }
-    })
+    }) as any // Type assertion to work around Prisma type issues
     
     if (!user) {
-      return NextResponse.json({
-        success: false,
-        message: 'Invalid credentials',
-        error: 'No user found with this email'
-      }, { status: 401 })
+      return createErrorResponse(ERROR_MESSAGES.INVALID_CREDENTIALS, 401, 'INVALID_CREDENTIALS')
     }
     
     // Check if user has a password (for password-based authentication)
     if (!user.password) {
-      return NextResponse.json({
-        success: false,
-        message: 'Please use OAuth to login',
-        error: 'This account uses OAuth authentication'
-      }, { status: 400 })
+      return createErrorResponse(
+        'This account uses social login. Please sign in with your social provider.',
+        400,
+        'OAUTH_ACCOUNT'
+      )
     }
     
     // Verify password
     const isValidPassword = await bcrypt.compare(validatedData.password, user.password)
     
     if (!isValidPassword) {
-      return NextResponse.json({
-        success: false,
-        message: 'Invalid credentials',
-        error: 'Password is incorrect'
-      }, { status: 401 })
+      return createErrorResponse(ERROR_MESSAGES.INVALID_CREDENTIALS, 401, 'INVALID_CREDENTIALS')
     }
 
     // Get the user's company ID (if they are a company user)
@@ -76,28 +75,9 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
       companyId: companyId
     }
     
-    
-    return NextResponse.json({
-      success: true,
-      message: 'Login successful',
-      data: userData
-    })
+    return createSuccessResponse(userData, 'Login successful')
     
   } catch (error) {
-    console.error('Login error:', error)
-    
-    if (error instanceof Error && error.name === 'ZodError') {
-      return NextResponse.json({
-        success: false,
-        message: 'Validation failed',
-        error: error.message
-      }, { status: 400 })
-    }
-    
-    return NextResponse.json({
-      success: false,
-      message: 'Login failed',
-      error: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 })
+    return handleApiError(error, 'Auth Login')
   }
 }

@@ -95,11 +95,11 @@ export async function PATCH(
   try {
     // Get authenticated user
     const user = await getAuthUserAsync(request)
-    if (!user || user.role !== 'company') {
+    if (!user || (user.role !== 'company' && user.role !== 'admin')) {
       return NextResponse.json({
         success: false,
         message: 'Unauthorized',
-        error: 'Only companies can update positions'
+        error: 'Only companies and admins can update positions'
       }, { status: 403 })
     }
 
@@ -139,7 +139,8 @@ export async function PATCH(
       }, { status: 404 })
     }
 
-    if (position.company.userId !== user.userId) {
+    // Check ownership: admins can update any position, companies can only update their own
+    if (user.role === 'company' && position.company.userId !== user.userId) {
       return NextResponse.json({
         success: false,
         message: 'Unauthorized',
