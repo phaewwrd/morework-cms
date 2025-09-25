@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { PlusCircle, Briefcase, Users, Clock, CheckCircle, XCircle, Eye, Loader2, LogOut } from 'lucide-react'
+import { PlusCircle, Briefcase, Users, Clock, CheckCircle, XCircle, Eye, Loader2, LogOut, Phone, MapPinHouse } from 'lucide-react'
 import { useCompanyPositions, useUserCompany } from '@/hooks/use-companies'
 import { useUpdateApplicationStatus } from '@/hooks/use-applications'
 import { parseSecureId } from '@/lib/hash'
@@ -247,14 +247,32 @@ export default function CompanyDashboardPage() {
     <div className="container mx-auto p-6 max-w-7xl">
       {/* Top Navigation Bar */}
       <div className="flex items-center justify-between mb-6 p-4 border-b">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center gap-4 w-full">
+          <div className="flex items-center gap-2 w-full">
             <div className="p-2 bg-primary/10 rounded-lg">
               <Briefcase className="h-6 w-6 text-primary" />
             </div>
             <div>
               <h1 className="font-semibold text-lg">{userCompany?.title || 'Company'}</h1>
               <p className="text-sm text-muted-foreground">Dashboard</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 w-full">
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <Phone className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <h1 className="font-semibold text-lg">เบอร์ติดต่อ</h1>
+              <p className="text-sm text-muted-foreground">{userCompany?.contactName} {userCompany?.contactPhone}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 w-full">
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <MapPinHouse className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <h1 className="font-semibold text-lg">ที่อยู่</h1>
+              <p className="text-sm text-muted-foreground">{ userCompany?.address || '-'}</p>
             </div>
           </div>
         </div>
