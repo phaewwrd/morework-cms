@@ -362,6 +362,60 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   type __Unused = __Check
 }
 
+// Validate ../../src/app/api/v1/applicant-positions/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/v1/applicant-positions">> = Specific
+  const handler = {} as typeof import("../../src/app/api/v1/applicant-positions/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../src/app/api/v1/applicants/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/v1/applicants">> = Specific
+  const handler = {} as typeof import("../../src/app/api/v1/applicants/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../src/app/api/v1/hello-world/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/v1/hello-world">> = Specific
+  const handler = {} as typeof import("../../src/app/api/v1/hello-world/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../src/app/api/v1/job-types/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/v1/job-types">> = Specific
+  const handler = {} as typeof import("../../src/app/api/v1/job-types/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../src/app/api/v1/locations/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/v1/locations">> = Specific
+  const handler = {} as typeof import("../../src/app/api/v1/locations/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../src/app/api/v1/positions/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/v1/positions">> = Specific
+  const handler = {} as typeof import("../../src/app/api/v1/positions/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
 
 
 

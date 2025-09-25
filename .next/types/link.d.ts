@@ -48,6 +48,12 @@ declare namespace __next_route_internal_types__ {
     | `/api/job-types`
     | `/api/positions`
     | `/api/users`
+    | `/api/v1/applicant-positions`
+    | `/api/v1/applicants`
+    | `/api/v1/hello-world`
+    | `/api/v1/job-types`
+    | `/api/v1/locations`
+    | `/api/v1/positions`
     | `/auth/login`
     | `/auth/register`
     | `/dashboard`

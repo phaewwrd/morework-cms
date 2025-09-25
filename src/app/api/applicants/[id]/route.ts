@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { applicantUpdateSchema, type ApiResponse } from '@/lib/validations'
 import { getAuthUserAsync } from '@/lib/jwt'
 import { prisma } from '@/lib/prisma'
+import { upsertApplicantData } from '@/hooks/use-applicants'
 
 interface RouteParams {
   params: Promise<{
@@ -290,104 +291,125 @@ export async function GET(
   }
 }
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: RouteParams
-): Promise<NextResponse<ApiResponse>> {
+// export async function PATCH(
+//   request: NextRequest,
+//   { params }: RouteParams
+// ): Promise<NextResponse<ApiResponse>> {
+//   try {
+//     // Get authenticated user
+//     const user = await getAuthUserAsync(request)
+//     if (!user) {
+//       return NextResponse.json({
+//         success: false,
+//         message: 'Authentication required',
+//         error: 'Please login to update applicant'
+//       }, { status: 401 })
+//     }
+
+//     const { id } = await params
+//     const applicantId = parseInt(id)
+
+//     if (isNaN(applicantId)) {
+//       return NextResponse.json({
+//         success: false,
+//         message: 'Invalid applicant ID',
+//         error: 'Applicant ID must be a number'
+//       }, { status: 400 })
+//     }
+
+//     const body = await request.json()
+    
+//     // Validate request data
+//     const validatedData = applicantUpdateSchema.parse(body)
+    
+//     // Update applicant
+//     const updatedApplicant = await prisma.applicant.update({
+//       where: { id: applicantId },
+//       data: validatedData,
+//       include: {
+//         addresses: {
+//           include: {
+//             district: {
+//               include: {
+//                 province: true
+//               }
+//             }
+//           }
+//         },
+//         educations: {
+//           include: {
+//             educationLevel: true
+//           }
+//         },
+//         workExperiences: true,
+//         trainings: true,
+//         documents: true,
+//         positions: {
+//           include: {
+//             position: {
+//               include: {
+//                 company: true
+//               }
+//             }
+//           }
+//         },
+//         socialMedia: true
+//       }
+//     })
+    
+//     return NextResponse.json({
+//       success: true,
+//       message: 'Applicant updated successfully',
+//       data: updatedApplicant
+//     })
+    
+//   } catch (error) {
+//     console.error('Update applicant error:', error)
+    
+//     if (error instanceof Error && error.name === 'ZodError') {
+//       return NextResponse.json({
+//         success: false,
+//         message: 'Validation failed',
+//         error: error.message
+//       }, { status: 400 })
+//     }
+    
+//     if (error instanceof Error && error.message.includes('Record to update not found')) {
+//       return NextResponse.json({
+//         success: false,
+//         message: 'Applicant not found',
+//         error: 'No applicant found with the given ID'
+//       }, { status: 404 })
+//     }
+    
+//     return NextResponse.json({
+//       success: false,
+//       message: 'Applicant update failed',
+//       error: error instanceof Error ? error.message : 'Unknown error'
+//     }, { status: 500 })
+//   }
+// }
+export async function PATCH(req: Request, { params }: { params: { id: string } }) {
   try {
-    // Get authenticated user
-    const user = await getAuthUserAsync(request)
-    if (!user) {
-      return NextResponse.json({
-        success: false,
-        message: 'Authentication required',
-        error: 'Please login to update applicant'
-      }, { status: 401 })
-    }
+        const { id } = await params
 
-    const { id } = await params
-    const applicantId = parseInt(id)
-
+    const applicantId = parseInt(id, 10);
     if (isNaN(applicantId)) {
-      return NextResponse.json({
-        success: false,
-        message: 'Invalid applicant ID',
-        error: 'Applicant ID must be a number'
-      }, { status: 400 })
+      return new Response(JSON.stringify({ success: false, error: "Invalid applicant ID" }), { status: 400, headers: { "Content-Type": "application/json" } });
     }
 
-    const body = await request.json()
-    
-    // Validate request data
-    const validatedData = applicantUpdateSchema.parse(body)
-    
-    // Update applicant
-    const updatedApplicant = await prisma.applicant.update({
-      where: { id: applicantId },
-      data: validatedData,
-      include: {
-        addresses: {
-          include: {
-            district: {
-              include: {
-                province: true
-              }
-            }
-          }
-        },
-        educations: {
-          include: {
-            educationLevel: true
-          }
-        },
-        workExperiences: true,
-        trainings: true,
-        documents: true,
-        positions: {
-          include: {
-            position: {
-              include: {
-                company: true
-              }
-            }
-          }
-        },
-        socialMedia: true
-      }
-    })
-    
-    return NextResponse.json({
-      success: true,
-      message: 'Applicant updated successfully',
-      data: updatedApplicant
-    })
-    
+    const body = await req.json();
+
+    await upsertApplicantData(prisma, applicantId, body);
+
+    return new Response(JSON.stringify({ success: true, data: null }), { status: 200, headers: { "Content-Type": "application/json" } });
   } catch (error) {
-    console.error('Update applicant error:', error)
-    
-    if (error instanceof Error && error.name === 'ZodError') {
-      return NextResponse.json({
-        success: false,
-        message: 'Validation failed',
-        error: error.message
-      }, { status: 400 })
-    }
-    
-    if (error instanceof Error && error.message.includes('Record to update not found')) {
-      return NextResponse.json({
-        success: false,
-        message: 'Applicant not found',
-        error: 'No applicant found with the given ID'
-      }, { status: 404 })
-    }
-    
-    return NextResponse.json({
-      success: false,
-      message: 'Applicant update failed',
-      error: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 })
+    console.error(error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    return new Response(JSON.stringify({ success: false, error: errorMessage }), { status: 500, headers: { "Content-Type": "application/json" } });
   }
 }
+
 
 export async function DELETE(
   request: NextRequest,
