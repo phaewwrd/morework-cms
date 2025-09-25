@@ -119,6 +119,7 @@ export const upsertApplicantData = async (prisma: PrismaClient, applicantId: num
     first_name,
     last_name,
     gender,
+    age,
     phone,
     birth_date,
     passed_experience,
@@ -144,6 +145,7 @@ export const upsertApplicantData = async (prisma: PrismaClient, applicantId: num
   if (gender) applicantData.gender = gender.toUpperCase();
   if (phone) applicantData.phone = phone;
   if (email) applicantData.email = email;
+  if (age) applicantData.age = Number(age);
   if (birth_date) {
     applicantData.birthDate = new Date(birth_date);
     applicantData.age = new Date().getFullYear() - new Date(birth_date).getFullYear();

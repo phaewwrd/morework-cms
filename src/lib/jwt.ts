@@ -102,8 +102,31 @@ export function getAuthUser(request?: NextRequest): JWTPayload | null {
       return null
     }
 
-    return verifyToken(token)
-  } catch {
+    // Verify token - this will throw an error if expired or invalid
+    const decoded = verifyToken(token)
+    
+    // Additional validation - ensure required fields are present
+    if (!decoded.userId || !decoded.email || !decoded.role) {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Token missing required fields:', { userId: !!decoded.userId, email: !!decoded.email, role: !!decoded.role })
+      }
+      return null
+    }
+
+    // Check if token is expired (extra safety check)
+    if (decoded.exp && decoded.exp < Math.floor(Date.now() / 1000)) {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Token expired:', { exp: decoded.exp, now: Math.floor(Date.now() / 1000) })
+      }
+      return null
+    }
+
+    return decoded
+  } catch (error) {
+    // Log the error for debugging (remove in production)
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('Token validation failed:', error instanceof Error ? error.message : error)
+    }
     return null
   }
 }
@@ -117,20 +140,41 @@ export async function getAuthUserAsync(request?: NextRequest): Promise<JWTPayloa
     
     if (request) {
       // Try to get token from request cookies
-      token = request.cookies.get('auth-token')?.value
+      token = request.cookies.get(COOKIE_NAME)?.value
     } else {
       // Fallback to server-side cookies
       const cookieStore = await cookies()
-      token = cookieStore.get('auth-token')?.value
+      token = cookieStore.get(COOKIE_NAME)?.value
     }
     
     if (!token) {
       return null
     }
     
-    return verifyToken(token)
+    // Verify token - this will throw an error if expired or invalid
+    const decoded = verifyToken(token)
+    
+    // Additional validation - ensure required fields are present
+    if (!decoded.userId || !decoded.email || !decoded.role) {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Token missing required fields:', { userId: !!decoded.userId, email: !!decoded.email, role: !!decoded.role })
+      }
+      return null
+    }
+
+    // Check if token is expired (extra safety check)
+    if (decoded.exp && decoded.exp < Math.floor(Date.now() / 1000)) {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Token expired:', { exp: decoded.exp, now: Math.floor(Date.now() / 1000) })
+      }
+      return null
+    }
+
+    return decoded
   } catch (error) {
-    console.error('Error getting authenticated user:', error)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error getting authenticated user:', error instanceof Error ? error.message : error)
+    }
     return null
   }
 }

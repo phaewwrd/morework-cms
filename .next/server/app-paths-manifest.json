@@ -1,6 +1,8 @@
 {
-  "/api/job-types/route": "app/api/job-types/route.js",
-  "/api/applicants/[id]/route": "app/api/applicants/[id]/route.js",
+  "/api/positions/[id]/route": "app/api/positions/[id]/route.js",
+  "/admin/companies/page": "app/admin/companies/page.js",
+  "/auth/login/page": "app/auth/login/page.js",
+  "/dashboard/companies/[id]/applicants/[applicantId]/page": "app/dashboard/companies/[id]/applicants/[applicantId]/page.js",
   "/admin/moreworks/applicant/[id]/page": "app/admin/moreworks/applicant/[id]/page.js",
   "/admin/moreworks/page": "app/admin/moreworks/page.js"
 }

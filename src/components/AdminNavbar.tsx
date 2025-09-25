@@ -56,7 +56,7 @@ export default function AdminNavbar({ className }: AdminNavbarProps) {
               <div className="p-1.5 bg-blue-600 rounded">
                 <Shield className="h-5 w-5 text-white" />
               </div>
-              <span className="font-semibold text-lg text-gray-900">Admin Panel</span>
+              <span className="font-semibold text-lg text-gray-900">MoreWork Back office</span>
             </div>
 
             {/* Navigation Links */}

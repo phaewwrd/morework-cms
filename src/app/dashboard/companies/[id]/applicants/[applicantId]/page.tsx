@@ -5,9 +5,11 @@ import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { ArrowLeft, User, Mail, Phone, DollarSign, Calendar, Briefcase, FileText, CheckCircle, XCircle, RotateCcw, Loader2 } from 'lucide-react'
+import { ArrowLeft, User, Mail, Phone, DollarSign, Calendar, Briefcase, FileText, CheckCircle, XCircle, RotateCcw, Loader2, MapPin, GraduationCap, Building2 } from 'lucide-react'
 import { useApplicant } from '@/hooks/use-applicants'
 import { useUpdateApplicationStatus } from '@/hooks/use-applications'
+import { useParams } from 'next/navigation'
+
 
 interface ApplicantDetailPageProps {
   params: {
@@ -15,8 +17,10 @@ interface ApplicantDetailPageProps {
   }
 }
 
-export default function ApplicantDetailPage({ params }: ApplicantDetailPageProps) {
-  const applicantId = parseInt(params.id)
+export default  function ApplicantDetailPage() {
+  const { id: companyId, applicantId: applicantIdParam } = useParams()
+  const applicantId = parseInt(applicantIdParam as string)
+  const hashedCompanyId = companyId as string
 
   // Fetch applicant details using TanStack Query
   const { 
@@ -88,7 +92,7 @@ export default function ApplicantDetailPage({ params }: ApplicantDetailPageProps
       <div className="mb-8">
         <div className="flex items-center gap-4 mb-4">
           <Button asChild variant="ghost" size="sm">
-            <Link href={"/dashboard/companies/applicants" as any}>
+            <Link href={`/dashboard/companies/${hashedCompanyId}/applicants` as any}>
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Applicants
             </Link>
@@ -101,7 +105,7 @@ export default function ApplicantDetailPage({ params }: ApplicantDetailPageProps
             </div>
             <div>
               <h1 className="text-3xl font-bold tracking-tight">
-                {applicant.firstName} {applicant.lastName}
+                {applicant.first_name} {applicant.last_name}
               </h1>
               <p className="text-muted-foreground">Applicant Profile & Applications</p>
             </div>
@@ -109,12 +113,58 @@ export default function ApplicantDetailPage({ params }: ApplicantDetailPageProps
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Applicant Information */}
-        <div className="lg:col-span-1">
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Left Column - Personal Information */}
+        <div className="space-y-6">
+          {/* Personal Information */}
           <Card>
             <CardHeader>
-              <CardTitle>Contact Information</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <User className="h-5 w-5" />
+                Personal Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">First Name</p>
+                  <p className="text-sm">{applicant.first_name}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Last Name</p>
+                  <p className="text-sm">{applicant.last_name}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Gender</p>
+                  <p className="text-sm">{applicant.gender}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Age</p>
+                  <p className="text-sm">{applicant.age}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Birth Date</p>
+                  <p className="text-sm">{applicant.birth_date ? new Date(applicant.birth_date).toLocaleDateString() : 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Start Working Date</p>
+                  <p className="text-sm">{applicant.start_working_date ? new Date(applicant.start_working_date).toLocaleDateString() : 'N/A'}</p>
+                </div>
+                <div className="col-span-2">
+                  <p className="text-sm font-medium text-muted-foreground">Preferred Location</p>
+                  <p className="text-sm">{applicant.prefferedLocation || 'N/A'}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Contact Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Mail className="h-5 w-5" />
+                Contact Information
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center gap-3">
@@ -131,168 +181,189 @@ export default function ApplicantDetailPage({ params }: ApplicantDetailPageProps
                   <p className="text-sm text-muted-foreground">{applicant.phone}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <Briefcase className="h-4 w-4 text-muted-foreground" />
-                <div>
-                  <p className="text-sm font-medium">Experience</p>
-                  <p className="text-sm text-muted-foreground">{applicant.experience} years</p>
-                </div>
-              </div>
-              {applicant.expectedSalary && (
-                <div className="flex items-center gap-3">
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium">Expected Salary</p>
-                    <p className="text-sm text-muted-foreground">
-                      ${applicant.expectedSalary.toLocaleString()}
-                    </p>
-                  </div>
-                </div>
-              )}
             </CardContent>
           </Card>
 
-          {/* Skills & Education */}
-          {(applicant.skills || applicant.education) && (
-            <Card className="mt-6">
+          {/* Addresses */}
+          {applicant.addresses && applicant.addresses.length > 0 && (
+            <Card>
               <CardHeader>
-                <CardTitle>Additional Information</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <MapPin className="h-5 w-5" />
+                  Addresses
+                </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                {applicant.skills && (
-                  <div>
-                    <p className="text-sm font-medium mb-2">Skills</p>
-                    <p className="text-sm text-muted-foreground">{applicant.skills}</p>
-                  </div>
-                )}
-                {applicant.education && (
-                  <div>
-                    <p className="text-sm font-medium mb-2">Education</p>
-                    <p className="text-sm text-muted-foreground">{applicant.education}</p>
-                  </div>
-                )}
+              <CardContent>
+                <div className="space-y-3">
+                  {applicant.addresses.map((address: any, index: number) => (
+                    <div key={address.id || index} className="p-3 border rounded-lg">
+                      <p className="text-sm text-muted-foreground">
+                        {address.address}, {address.district?.title}, {address.district?.province?.title}
+                      </p>
+                   
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Social Media */}
+          {applicant.socialMedia && applicant.socialMedia.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Building2 className="h-5 w-5" />
+                  Social Media
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {applicant.socialMedia.map((social: any) => (
+                    <div key={social.id} className="p-3 border rounded-lg">
+                      <p className="text-sm font-medium">{social.provider}</p>
+                      <p className="text-sm text-muted-foreground">{social.sessionId}</p>
+                    </div>
+                  ))}
+                </div>
               </CardContent>
             </Card>
           )}
         </div>
 
-        {/* Applications */}
-        <div className="lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Applications ({applicant.applications?.length || 0})</CardTitle>
-              <CardDescription>
-                All applications submitted by this candidate
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {!applicant.applications || applicant.applications.length === 0 ? (
-                <div className="text-center py-8">
-                  <FileText className="mx-auto h-8 w-8 text-muted-foreground" />
-                  <p className="text-muted-foreground mt-2">No applications found</p>
+        {/* Right Column - Professional Information */}
+        <div className="space-y-6">
+          {/* Job Types */}
+          {applicant.jobTypes && applicant.jobTypes.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Briefcase className="h-5 w-5" />
+                  Job Types
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-2">
+                  {applicant.jobTypes.map((jobType: any) => (
+                    <Badge key={jobType.id} variant="secondary">
+                      {jobType.jobType.title}
+                    </Badge>
+                  ))}
                 </div>
-              ) : (
-                <div className="space-y-6">
-                  {applicant.applications.map((application: any) => (
-                    <div
-                      key={application.id}
-                      className="border rounded-lg p-6"
-                    >
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-lg">{application.position.title}</h3>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {application.position.description}
-                          </p>
-                          <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
-                            <Calendar className="h-3 w-3" />
-                            Applied: {new Date(application.appliedAt).toLocaleDateString()}
-                          </div>
-                        </div>
-                        <Badge 
-                          variant={
-                            application.status === 'ACCEPTED' ? 'default' :
-                            application.status === 'PENDING' ? 'secondary' : 'destructive'
-                          }
-                          className="ml-4"
-                        >
-                          {application.status}
-                        </Badge>
-                      </div>
+              </CardContent>
+            </Card>
+          )}
 
-                      {/* Cover Letter */}
-                      {application.coverLetter && (
-                        <div className="mb-4">
-                          <h4 className="font-medium text-sm mb-2">Cover Letter</h4>
-                          <div className="bg-gray-50 p-3 rounded-lg">
-                            <p className="text-sm text-gray-700">{application.coverLetter}</p>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Resume Link */}
-                      {application.resumeUrl && (
-                        <div className="mb-4">
-                          <Button asChild variant="outline" size="sm">
-                            <Link 
-                              href={application.resumeUrl as any} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                            >
-                              <FileText className="h-4 w-4 mr-2" />
-                              View Resume
-                            </Link>
-                          </Button>
-                        </div>
-                      )}
-
-                      {/* Actions */}
-                      <div className="flex gap-2 pt-4 border-t">
-                        {application.status !== 'ACCEPTED' && (
-                          <Button
-                            size="sm"
-                            className="bg-green-600 hover:bg-green-700"
-                            onClick={() => updateApplicationStatus(application.id, 'ACCEPTED')}
-                            disabled={updateApplicationMutation.isPending}
-                          >
-                            <CheckCircle className="h-4 w-4 mr-2" />
-                            {updateApplicationMutation.isPending ? 'Updating...' : 'Accept'}
-                          </Button>
-                        )}
-                        {application.status !== 'REJECTED' && (
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => updateApplicationStatus(application.id, 'REJECTED')}
-                            disabled={updateApplicationMutation.isPending}
-                          >
-                            <XCircle className="h-4 w-4 mr-2" />
-                            {updateApplicationMutation.isPending ? 'Updating...' : 'Reject'}
-                          </Button>
-                        )}
-                        {(application.status === 'REJECTED' || application.status === 'ACCEPTED') && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => updateApplicationStatus(application.id, 'PENDING')}
-                            disabled={updateApplicationMutation.isPending}
-                          >
-                            <RotateCcw className="h-4 w-4 mr-2" />
-                            {updateApplicationMutation.isPending ? 'Updating...' : 'Reset to Pending'}
-                          </Button>
-                        )}
-                        <Button asChild size="sm" variant="outline">
-                          <Link href={`/dashboard/companies/positions/${application.position.id}` as any}>
-                            View Job Details
-                          </Link>
-                        </Button>
+          {/* Education */}
+          {applicant.educations && applicant.educations.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <GraduationCap className="h-5 w-5" />
+                  Education
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {applicant.educations.map((education: any) => (
+                    <div key={education.id} className="p-3 border rounded-lg">
+                      <p className="text-sm font-medium">{education.field}</p>
+                      <p className="text-sm text-muted-foreground">{education.institution}</p>
+                      <div className="flex justify-between items-center mt-2">
+                        <span className="text-xs text-muted-foreground">
+                          {education.educationLevel?.title} • {education.graduationYear}
+                        </span>
+                        <Badge variant="outline">GPA: {education.gpa}</Badge>
                       </div>
                     </div>
                   ))}
                 </div>
-              )}
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Work Experience */}
+          {applicant.workExperiences && applicant.workExperiences.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Briefcase className="h-5 w-5" />
+                  Work Experience
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {applicant.workExperiences.map((experience: any, index: number) => (
+                    <div key={experience.id || index} className="p-3 border rounded-lg">
+                      <p className="text-sm font-medium">{experience.position}</p>
+                      <p className="text-sm text-muted-foreground">{experience.company}</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {experience.start_date ? new Date(experience.start_date).toLocaleDateString() : 'N/A'} - 
+                        {experience.end_date ? new Date(experience.end_date).toLocaleDateString() : 'Present'}
+                      </p>
+                      {experience.description && (
+                        <p className="text-sm mt-2">{experience.description}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Trainings */}
+          {applicant.trainings && applicant.trainings.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <GraduationCap className="h-5 w-5" />
+                  Trainings
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {applicant.trainings.map((training: any) => (
+                    <div key={training.id} className="p-3 border rounded-lg">
+                      <p className="text-sm font-medium">{training.title}</p>
+                      <p className="text-sm text-muted-foreground">Year: {training.trainingYear}</p>
+                      {training.description && (
+                        <p className="text-sm mt-2">{training.description}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Documents */}
+          {applicant.documents && applicant.documents.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Documents
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {applicant.documents.map((document: any) => (
+                    <div key={document.id} className="p-3 border rounded-lg">
+                      <div className="flex justify-between items-center">
+                        <p className="text-sm font-medium">{document.description}</p>
+                        <Badge variant="outline">{document.documentType}</Badge>
+                      </div>
+                      {document.filePath && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          File: {document.filePath}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </div>

@@ -61,6 +61,8 @@ export default function AdminCompaniesPage() {
   })
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
+  const [editingPosition, setEditingPosition] = useState<number | null>(null)
+  const [updatingPosition, setUpdatingPosition] = useState<number | null>(null)
   useEffect(() => {
     fetchCompanies()
   }, [])
@@ -134,8 +136,10 @@ export default function AdminCompaniesPage() {
     return matchesSearch
   })
 
-  const updatePositionStatus = async (positionId: number, newStatus: 'ACTIVE'  | 'CLOSED' | 'PENDING') => {
+  const updatePositionStatus = async (positionId: number, newStatus: 'ACTIVE' | 'CLOSED' | 'PENDING') => {
     try {
+      setUpdatingPosition(positionId)
+      
       const response = await fetch(`/api/positions/${positionId}`, {
         method: 'PATCH',
         headers: {
@@ -170,6 +174,8 @@ export default function AdminCompaniesPage() {
         }))
         calculateStats(updatedCompanies)
         
+        setEditingPosition(null)
+        
         toast({
           title: 'Success',
           description: 'Position status updated successfully',
@@ -187,6 +193,8 @@ export default function AdminCompaniesPage() {
         description: 'Failed to update position status',
         variant: 'destructive',
       })
+    } finally {
+      setUpdatingPosition(null)
     }
   }
 
@@ -326,15 +334,17 @@ export default function AdminCompaniesPage() {
                         size="sm"
                         className="bg-green-600 hover:bg-green-700 text-white"
                         onClick={() => updatePositionStatus(position.id, 'ACTIVE')}
+                        disabled={updatingPosition === position.id}
                       >
-                        ✓ Approve
+                        {updatingPosition === position.id ? '...' : '✓ Approve'}
                       </Button>
                       <Button
                         size="sm"
                         variant="destructive"
                         onClick={() => updatePositionStatus(position.id, 'CLOSED')}
+                        disabled={updatingPosition === position.id}
                       >
-                        ✗ Deny
+                        {updatingPosition === position.id ? '...' : '✗ Deny'}
                       </Button>
                     </div>
                   </div>
@@ -378,7 +388,7 @@ export default function AdminCompaniesPage() {
         <CardHeader>
           <CardTitle>All Companies ({filteredCompanies.length})</CardTitle>
           <CardDescription>
-            Overview of all registered companies with their positions and applications
+            Overview of all registered companies with their positions and applications. Click on position status badges to edit them inline.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -424,7 +434,10 @@ export default function AdminCompaniesPage() {
                     {/* Positions List */}
                     {company.positions.length > 0 ? (
                       <div>
-                        <h3 className="font-medium mb-4 text-gray-800">Positions & Applications</h3>
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="font-medium text-gray-800">Positions & Applications</h3>
+                          <p className="text-xs text-muted-foreground">💡 Click on position status to edit</p>
+                        </div>
                         <div className="space-y-4">
                           {company.positions.map((position) => (
                             <div key={position.id} className="bg-gray-50 rounded-lg p-4">
@@ -432,52 +445,70 @@ export default function AdminCompaniesPage() {
                                 <div className="flex-1">
                                   <h4 className="font-medium">{position.title}</h4>
                                   <div className="flex items-center gap-2 mt-1">
-                                    <div className={`px-2 py-1 rounded text-xs font-medium ${
-                                      position.status === 'ACTIVE' ? 'bg-green-100 text-green-800' :
-                                      position.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
-                                      'bg-red-100 text-red-800'
-                                    }`}>
-                                      {position.status}
-                                    </div>
+                                    {/* Status Display/Edit */}
+                                    {editingPosition === position.id ? (
+                                      <div className="flex items-center gap-2">
+                                        <Select
+                                          value={position.status}
+                                          onValueChange={(value) => updatePositionStatus(position.id, value as 'ACTIVE'  | 'CLOSED' | 'PENDING')}
+                                          disabled={updatingPosition === position.id}
+                                        >
+                                          <SelectTrigger className="w-32 h-7">
+                                            <SelectValue />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            <SelectItem value="ACTIVE">
+                                              <div className="flex items-center gap-2">
+                                                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                                Active
+                                              </div>
+                                            </SelectItem>
+                                            <SelectItem value="PENDING">
+                                              <div className="flex items-center gap-2">
+                                                <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                                                Pending
+                                              </div>
+                                            </SelectItem>
+                                         
+                                            <SelectItem value="CLOSED">
+                                              <div className="flex items-center gap-2">
+                                                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                                                Closed
+                                              </div>
+                                            </SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() => setEditingPosition(null)}
+                                          disabled={updatingPosition === position.id}
+                                        >
+                                          Cancel
+                                        </Button>
+                                      </div>
+                                    ) : (
+                                      <div className="flex items-center gap-2">
+                                        <button
+                                          onClick={() => setEditingPosition(position.id)}
+                                          disabled={updatingPosition === position.id}
+                                          className={`px-2 py-1 rounded text-xs font-medium cursor-pointer hover:opacity-80 transition-opacity ${
+                                            position.status === 'ACTIVE' ? 'bg-green-100 text-green-800 hover:bg-green-200' :
+                                            position.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' :
+                                            'bg-red-100 text-red-800 hover:bg-red-200'
+                                          }`}
+                                        >
+                                          {updatingPosition === position.id ? 'Updating...' : position.status}
+                                        </button>
+                                      </div>
+                                    )}
+                                    
                                     {position.applicantPositions.length > 0 && (
                                       <div className="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs font-medium">
                                         {position.applicantPositions.length} applicant{position.applicantPositions.length > 1 ? 's' : ''}
                                       </div>
                                     )}
                                   </div>
-                                </div>
-                                <div className="ml-4">
-                                  <Select
-                                    value={position.status}
-                                    onValueChange={(newStatus: 'ACTIVE'  | 'CLOSED' | 'PENDING') => 
-                                      updatePositionStatus(position.id, newStatus)
-                                    }
-                                  >
-                                    <SelectTrigger className="w-32 h-8 text-xs">
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="ACTIVE">
-                                        <span className="flex items-center gap-2">
-                                          <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                                          ACTIVE
-                                        </span>
-                                      </SelectItem>
-                                      <SelectItem value="PENDING">
-                                        <span className="flex items-center gap-2">
-                                          <span className="w-2 h-2 bg-yellow-500 rounded-full"></span>
-                                          PENDING
-                                        </span>
-                                      </SelectItem>
-                                     
-                                      <SelectItem value="CLOSED">
-                                        <span className="flex items-center gap-2">
-                                          <span className="w-2 h-2 bg-red-500 rounded-full"></span>
-                                          CLOSED
-                                        </span>
-                                      </SelectItem>
-                                    </SelectContent>
-                                  </Select>
                                 </div>
                               </div>
                               

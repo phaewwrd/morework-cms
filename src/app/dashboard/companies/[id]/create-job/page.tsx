@@ -13,7 +13,7 @@ import { useCreatePosition } from '@/hooks/use-positions'
 interface JobFormData {
   title: string
   jobDescription: string
-  status: 'ACTIVE' | 'INACTIVE'
+  status: 'ACTIVE' | 'PENDING'
 }
 
 export default function CreateJobPage() {
@@ -118,14 +118,14 @@ export default function CreateJobPage() {
                   <label className="text-sm font-medium">Status</label>
                   <Select
                     value={formData.status}
-                    onValueChange={(value: 'ACTIVE' | 'INACTIVE') => handleInputChange('status', value)}
+                    onValueChange={(value: 'ACTIVE' | 'PENDING') => handleInputChange('status', value)}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select status" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="ACTIVE">Active - Start accepting applications</SelectItem>
-                      <SelectItem value="INACTIVE">Draft - Save for later</SelectItem>
+                      <SelectItem value="PENDING">Draft - Save for later</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

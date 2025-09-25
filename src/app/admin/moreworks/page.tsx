@@ -24,10 +24,11 @@ interface Applicant {
   experience: number
   expectedSalary: number
   currentlyEmployed: boolean
+  applicationStatus: 'PENDING' | 'ACCEPTED' | 'REJECTED'
   positions?: Array<{
     id: number
     title: string
-    status: 'ACTIVE' | 'INACTIVE' | 'CLOSED'
+    status: 'ACTIVE' | 'PENDING' | 'CLOSED'
     applicationStatus: 'PENDING' | 'ACCEPTED' | 'REJECTED'
     company: {
       title: string
@@ -90,27 +91,17 @@ export default function MoreWorksPage() {
     const stats = applicantData.reduce(
       (acc, applicant) => {
         acc.total += 1
-        
-        // Check if applicant has any positions and get their statuses
-        if (applicant.positions && applicant.positions.length > 0) {
-          // Count status from all applications, but avoid double counting the same applicant
-          const hasAccepted = applicant.positions.some(pos => pos.applicationStatus === 'ACCEPTED')
-          const hasPending = applicant.positions.some(pos => pos.applicationStatus === 'PENDING')
-          const hasRejected = applicant.positions.some(pos => pos.applicationStatus === 'REJECTED')
-          
-          // Prioritize status: ACCEPTED > PENDING > REJECTED
-          if (hasAccepted) {
+        switch (applicant.applicationStatus) {
+          case 'ACCEPTED':
             acc.accepted += 1
-          } else if (hasPending) {
+            break
+          case 'PENDING':
             acc.pending += 1
-          } else if (hasRejected) {
+            break
+          case 'REJECTED':
             acc.rejected += 1
-          }
-        } else {
-          // If no positions, consider as pending (no applications yet)
-          acc.pending += 1
+            break
         }
-        
         return acc
       },
       { total: 0, accepted: 0, pending: 0, rejected: 0 }
@@ -122,20 +113,8 @@ export default function MoreWorksPage() {
     const matchesSearch = 
       applicant.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       applicant.lastName.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesGender = genderFilter === '' || genderFilter === 'ALL' || applicant.gender === genderFilter
-    
-    // Handle status filtering based on applicant's positions
-    let matchesStatus = true
-    if (statusFilter !== '' && statusFilter !== 'ALL') {
-      if (applicant.positions && applicant.positions.length > 0) {
-        // Check if any of the applicant's positions match the filter status
-        const hasStatusMatch = applicant.positions.some(pos => pos.applicationStatus === statusFilter)
-        matchesStatus = hasStatusMatch
-      } else {
-        // If no positions, consider as pending
-        matchesStatus = statusFilter === 'PENDING'
-      }
-    }
+    const matchesGender = genderFilter === '' || applicant.gender === genderFilter
+    const matchesStatus = statusFilter === '' || applicant.applicationStatus === statusFilter
     
     return matchesSearch && matchesGender && matchesStatus
   })
