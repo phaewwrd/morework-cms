@@ -25,7 +25,7 @@ interface Company {
   positions: Array<{
     id: number
     title: string
-    status: 'ACTIVE' | 'INACTIVE' | 'CLOSED' | 'PENDING'
+    status: 'ACTIVE' | 'CLOSED' | 'PENDING'
     applicantPositions: Array<{
       id: number
       status: 'PENDING' | 'ACCEPTED' | 'REJECTED'
@@ -136,7 +136,7 @@ export default function AdminCompaniesPage() {
     return matchesSearch
   })
 
-  const updatePositionStatus = async (positionId: number, newStatus: 'ACTIVE' | 'INACTIVE' | 'CLOSED' | 'PENDING') => {
+  const updatePositionStatus = async (positionId: number, newStatus: 'ACTIVE' | 'CLOSED' | 'PENDING') => {
     try {
       setUpdatingPosition(positionId)
       
@@ -450,7 +450,7 @@ export default function AdminCompaniesPage() {
                                       <div className="flex items-center gap-2">
                                         <Select
                                           value={position.status}
-                                          onValueChange={(value) => updatePositionStatus(position.id, value as 'ACTIVE' | 'INACTIVE' | 'CLOSED' | 'PENDING')}
+                                          onValueChange={(value) => updatePositionStatus(position.id, value as 'ACTIVE'  | 'CLOSED' | 'PENDING')}
                                           disabled={updatingPosition === position.id}
                                         >
                                           <SelectTrigger className="w-32 h-7">
@@ -469,12 +469,7 @@ export default function AdminCompaniesPage() {
                                                 Pending
                                               </div>
                                             </SelectItem>
-                                            <SelectItem value="INACTIVE">
-                                              <div className="flex items-center gap-2">
-                                                <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
-                                                Inactive
-                                              </div>
-                                            </SelectItem>
+                                         
                                             <SelectItem value="CLOSED">
                                               <div className="flex items-center gap-2">
                                                 <div className="w-2 h-2 bg-red-500 rounded-full"></div>
@@ -500,7 +495,6 @@ export default function AdminCompaniesPage() {
                                           className={`px-2 py-1 rounded text-xs font-medium cursor-pointer hover:opacity-80 transition-opacity ${
                                             position.status === 'ACTIVE' ? 'bg-green-100 text-green-800 hover:bg-green-200' :
                                             position.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' :
-                                            position.status === 'INACTIVE' ? 'bg-gray-100 text-gray-800 hover:bg-gray-200' :
                                             'bg-red-100 text-red-800 hover:bg-red-200'
                                           }`}
                                         >

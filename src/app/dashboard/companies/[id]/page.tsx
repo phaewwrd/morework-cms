@@ -41,7 +41,7 @@ interface Position {
   id: number;
   title: string;
   jobDescription: string;
-  status: "ACTIVE" | "INACTIVE" | "CLOSED";
+  status: "ACTIVE" | "PENDING" | "CLOSED";
   companyId: number;
   createdAt?: string;
   company?: {
@@ -140,7 +140,7 @@ export default function CompanyDashboardPage() {
         acc.totalJobs += 1;
         if (position.status === "ACTIVE") {
           acc.activeJobs += 1;
-        } else if (position.status === "INACTIVE") {
+        } else if (position.status === "PENDING") {
           acc.pendingJobs += 1;
         }
 
@@ -385,7 +385,7 @@ export default function CompanyDashboardPage() {
             <CardContent>
               <div className="text-2xl font-bold">{stats.pendingJobs}</div>
               <p className="text-xs text-muted-foreground">
-                Inactive positions
+                Pending positions
               </p>
             </CardContent>
           </Card>
@@ -475,7 +475,7 @@ export default function CompanyDashboardPage() {
               <SelectContent>
                 <SelectItem value="ALL">All Statuses</SelectItem>
                 <SelectItem value="ACTIVE">Active</SelectItem>
-                <SelectItem value="INACTIVE">Inactive</SelectItem>
+                <SelectItem value="PENDING">Pending</SelectItem>
                 <SelectItem value="CLOSED">Closed</SelectItem>
               </SelectContent>
             </Select>
@@ -520,7 +520,7 @@ export default function CompanyDashboardPage() {
                           variant={
                             position.status === "ACTIVE"
                               ? "outline"
-                              : position.status === "INACTIVE"
+                              : position.status === "PENDING"
                               ? "secondary"
                               : "destructive"
                           }
