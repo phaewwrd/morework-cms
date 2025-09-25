@@ -10,13 +10,15 @@ import { useApplicant } from '@/hooks/use-applicants'
 import { useUpdateApplicationStatus } from '@/hooks/use-applications'
 
 interface ApplicantDetailPageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+    applicantId: string
+  }>
 }
 
-export default function ApplicantDetailPage({ params }: ApplicantDetailPageProps) {
-  const applicantId = parseInt(params.id)
+export default async function ApplicantDetailPage({ params }: ApplicantDetailPageProps) {
+  const { id, applicantId } = await params
+  const applicantIdNum = parseInt(applicantId)
 
   // Fetch applicant details using TanStack Query
   const { 
@@ -24,7 +26,7 @@ export default function ApplicantDetailPage({ params }: ApplicantDetailPageProps
     isLoading, 
     error,
     refetch 
-  } = useApplicant(applicantId, !isNaN(applicantId))
+  } = useApplicant(applicantIdNum, !isNaN(applicantIdNum))
 
   // Update application status mutation
   const updateApplicationMutation = useUpdateApplicationStatus()

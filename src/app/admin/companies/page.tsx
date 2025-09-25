@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { toast } from '@/hooks/use-toast'
 import AdminNavbar from '@/components/AdminNavbar'
 
@@ -25,7 +24,7 @@ interface Company {
   positions: Array<{
     id: number
     title: string
-    status: 'ACTIVE' | 'CLOSED' | 'PENDING'
+    status: 'ACTIVE' | 'INACTIVE' | 'CLOSED' | 'PENDING'
     applicantPositions: Array<{
       id: number
       status: 'PENDING' | 'ACCEPTED' | 'REJECTED'
@@ -134,7 +133,7 @@ export default function AdminCompaniesPage() {
     return matchesSearch
   })
 
-  const updatePositionStatus = async (positionId: number, newStatus: 'ACTIVE'  | 'CLOSED' | 'PENDING') => {
+  const updatePositionStatus = async (positionId: number, newStatus: 'ACTIVE' | 'INACTIVE' | 'CLOSED' | 'PENDING') => {
     try {
       const response = await fetch(`/api/positions/${positionId}`, {
         method: 'PATCH',
@@ -435,6 +434,7 @@ export default function AdminCompaniesPage() {
                                     <div className={`px-2 py-1 rounded text-xs font-medium ${
                                       position.status === 'ACTIVE' ? 'bg-green-100 text-green-800' :
                                       position.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                                      position.status === 'INACTIVE' ? 'bg-gray-100 text-gray-800' :
                                       'bg-red-100 text-red-800'
                                     }`}>
                                       {position.status}
@@ -445,39 +445,6 @@ export default function AdminCompaniesPage() {
                                       </div>
                                     )}
                                   </div>
-                                </div>
-                                <div className="ml-4">
-                                  <Select
-                                    value={position.status}
-                                    onValueChange={(newStatus: 'ACTIVE'  | 'CLOSED' | 'PENDING') => 
-                                      updatePositionStatus(position.id, newStatus)
-                                    }
-                                  >
-                                    <SelectTrigger className="w-32 h-8 text-xs">
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="ACTIVE">
-                                        <span className="flex items-center gap-2">
-                                          <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                                          ACTIVE
-                                        </span>
-                                      </SelectItem>
-                                      <SelectItem value="PENDING">
-                                        <span className="flex items-center gap-2">
-                                          <span className="w-2 h-2 bg-yellow-500 rounded-full"></span>
-                                          PENDING
-                                        </span>
-                                      </SelectItem>
-                                     
-                                      <SelectItem value="CLOSED">
-                                        <span className="flex items-center gap-2">
-                                          <span className="w-2 h-2 bg-red-500 rounded-full"></span>
-                                          CLOSED
-                                        </span>
-                                      </SelectItem>
-                                    </SelectContent>
-                                  </Select>
                                 </div>
                               </div>
                               

@@ -1,13 +1,7 @@
 {
-  "/api/applicants/route": "app/api/applicants/route.js",
-  "/api/companies/route": "app/api/companies/route.js",
   "/api/auth/me/route": "app/api/auth/me/route.js",
-  "/api/auth/login/route": "app/api/auth/login/route.js",
-  "/api/applicants/[id]/route": "app/api/applicants/[id]/route.js",
   "/api/job-types/route": "app/api/job-types/route.js",
-  "/admin/companies/page": "app/admin/companies/page.js",
+  "/api/applicants/[id]/route": "app/api/applicants/[id]/route.js",
   "/admin/moreworks/applicant/[id]/page": "app/admin/moreworks/applicant/[id]/page.js",
-  "/auth/login/page": "app/auth/login/page.js",
-  "/admin/moreworks/page": "app/admin/moreworks/page.js",
-  "/auth/register/page": "app/auth/register/page.js"
+  "/admin/moreworks/page": "app/admin/moreworks/page.js"
 }

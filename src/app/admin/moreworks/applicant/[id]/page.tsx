@@ -52,7 +52,6 @@ export default function ApplicantDetailPage() {
         phone: applicant.phone,
         gender: applicant.gender,
         age: applicant.age,
-        birthDate: applicant.birthDate,
         startWorkingDate: applicant.startWorkingDate,
         prefferedLocation: applicant.prefferedLocation,
       })
@@ -75,7 +74,7 @@ const handleSave = async () => {
         email: formData.email,
         phone: formData.phone,
         gender: formData.gender,
-        birth_date: formData.birthDate,
+        age: formData.age,
         StartWorkingDate: formData.startWorkingDate,
         prefferedLocation: formData.prefferedLocation,
         preferred_job_type: selectedJobTypes
@@ -122,7 +121,6 @@ const handleSave = async () => {
         phone: applicant.phone,
         gender: applicant.gender,
         age: applicant.age,
-        birthDate: applicant.birthDate,
         startWorkingDate: applicant.startWorkingDate,
         prefferedLocation: applicant.prefferedLocation,
       })
@@ -140,14 +138,14 @@ const handleSave = async () => {
     }
   }
 
-  const formatDateForDisplay = (dateString: string) => {
-    try {
-      const date = new Date(dateString)
-      return date.getTime() > 0 ? date.toLocaleDateString() : 'Invalid Date'
-    } catch {
-      return 'Invalid Date'
-    }
+const formatDateForDisplay = (dateString: string) => {
+  try {
+    const date = new Date(dateString)
+   return  date.toISOString().split('T')[0] 
+  } catch {
+    // return 'N/A'
   }
+}
 
   if (isLoading) {
     return (
@@ -312,7 +310,7 @@ const handleSave = async () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="text-sm font-medium text-gray-500">Gender</label>
                     {isEditing ? (
@@ -337,9 +335,9 @@ const handleSave = async () => {
                     <label className="text-sm font-medium text-gray-500">Age</label>
                     {isEditing ? (
                       <Input
-                        type="number"
+                      type='number'
                         value={formData.age || ''}
-                        onChange={(e) => handleInputChange('age', parseInt(e.target.value) || 0)}
+                        onChange={(e) => handleInputChange('age', e.target.value || 0)}
                         placeholder="Enter age"
                         className="mt-1"
                       />
@@ -347,19 +345,7 @@ const handleSave = async () => {
                       <p className="mt-1 text-sm">{applicant.age}</p>
                     )}
                   </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">Birth Date</label>
-                    {isEditing ? (
-                      <Input
-                        type="date"
-                        value={formatDateForInput(formData.birthDate || '')}
-                        onChange={(e) => handleInputChange('birthDate', e.target.value)}
-                        className="mt-1"
-                      />
-                    ) : (
-                      <p className="mt-1 text-sm">{formatDateForDisplay(applicant.birthDate)}</p>
-                    )}
-                  </div>
+                  
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
