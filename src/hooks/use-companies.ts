@@ -4,6 +4,7 @@ import { companiesApi, positionsApi } from '@/lib/api-client'
 import { queryKeys } from '@/lib/query-keys'
 import { createSecureId } from '@/lib/hash'
 import { toast } from '@/hooks/use-toast'
+import { Company } from '@/types'
 
 // Company queries
 export function useCompanies(filters?: any) {
@@ -126,7 +127,7 @@ export function useDeleteCompany() {
 export function useUserCompany() {
   const { data: user } = useAuth()
   
-  return useQuery({
+  return useQuery<Company>({
     queryKey: queryKeys.companies.userCompany(user?.data?.userId || 0),
     queryFn: async () => {
       const response = await companiesApi.getCurrentUserCompany()
