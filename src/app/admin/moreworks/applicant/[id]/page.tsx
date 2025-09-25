@@ -231,7 +231,7 @@ const formatDateForDisplay = (dateString: string) => {
             </div>
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
-                {isEditing ? formData.firstName || '' : applicant.firstName} {isEditing ? formData.lastName || '' : applicant.lastName}
+                {isEditing ? formData.first_name || '' : applicant.first_name} {isEditing ? formData.last_name || '' : applicant.last_name}
               </h1>
               <p className="text-gray-600">{isEditing ? formData.email || '' : applicant.email}</p>
             </div>
@@ -255,26 +255,26 @@ const formatDateForDisplay = (dateString: string) => {
                     <label className="text-sm font-medium text-gray-500">First Name</label>
                     {isEditing ? (
                       <Input
-                        value={formData.firstName || ''}
-                        onChange={(e) => handleInputChange('firstName', e.target.value)}
+                        value={formData.first_name || ''}
+                        onChange={(e) => handleInputChange('first_name', e.target.value)}
                         placeholder="Enter first name"
                         className="mt-1"
                       />
                     ) : (
-                      <p className="mt-1 text-sm">{applicant.firstName}</p>
+                      <p className="mt-1 text-sm">{applicant.first_name}</p>
                     )}
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-500">Last Name</label>
                     {isEditing ? (
                       <Input
-                        value={formData.lastName || ''}
-                        onChange={(e) => handleInputChange('lastName', e.target.value)}
+                        value={formData.last_name || ''}
+                        onChange={(e) => handleInputChange('last_name', e.target.value)}
                         placeholder="Enter last name"
                         className="mt-1"
                       />
                     ) : (
-                      <p className="mt-1 text-sm">{applicant.lastName}</p>
+                      <p className="mt-1 text-sm">{applicant.last_name}</p>
                     )}
                   </div>
                 </div>

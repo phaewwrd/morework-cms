@@ -1,7 +1,8 @@
 {
   "/api/auth/me/route": "app/api/auth/me/route.js",
-  "/api/job-types/route": "app/api/job-types/route.js",
-  "/api/applicants/[id]/route": "app/api/applicants/[id]/route.js",
+  "/dashboard/companies/[id]/applicants/[applicantId]/page": "app/dashboard/companies/[id]/applicants/[applicantId]/page.js",
+  "/admin/moreworks/page": "app/admin/moreworks/page.js",
+  "/auth/login/page": "app/auth/login/page.js",
   "/admin/moreworks/applicant/[id]/page": "app/admin/moreworks/applicant/[id]/page.js",
-  "/admin/moreworks/page": "app/admin/moreworks/page.js"
+  "/admin/companies/page": "app/admin/companies/page.js"
 }

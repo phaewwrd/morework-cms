@@ -307,10 +307,7 @@ export default function AllApplicantsPage() {
                           <Phone className="h-4 w-4" />
                           {applicant.phone}
                         </span>
-                        <span className="flex items-center gap-1">
-                          <Briefcase className="h-4 w-4" />
-                          {applicant.experience} years experience
-                        </span>
+                       
                       </div>
                       {applicant.expectedSalary && (
                         <p className="text-sm text-muted-foreground mt-1">
@@ -319,7 +316,7 @@ export default function AllApplicantsPage() {
                       )}
                     </div>
                     <Button asChild size="sm" variant="outline">
-                      <Link href={`/dashboard/companies/applicants/${applicant.id}` as any}>
+                      <Link href={`/dashboard/companies/${hashedCompanyId}/applicants/${applicant.id}` as any}>
                         <Eye className="h-4 w-4 mr-2" />
                         View Profile
                       </Link>
