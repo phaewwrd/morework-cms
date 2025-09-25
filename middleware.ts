@@ -20,10 +20,14 @@ const protectedApiRoutes = [
 // Define public routes that don't require authentication
 const publicRoutes = [
   '/',
-  '/auth/login',
   '/auth/register',
   '/api/auth/login',
   '/api/auth/register',
+]
+
+// Define auth routes that should redirect authenticated users
+const authRoutes = [
+  '/auth/login',
 ]
 
 export function middleware(request: NextRequest) {
@@ -32,8 +36,9 @@ export function middleware(request: NextRequest) {
   // Get the authenticated user
   const user = getAuthUser(request)
   
-  // Check if route is public
+  // Check route types
   const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route))
+  const isAuthRoute = authRoutes.some(route => pathname.startsWith(route))
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))
   const isProtectedApiRoute = protectedApiRoutes.some(route => pathname.startsWith(route))
 
@@ -49,8 +54,14 @@ export function middleware(request: NextRequest) {
     )
   }
   
-  // Handle public routes - redirect authenticated users to appropriate dashboard
-  if (isPublicRoute && user) {
+  // Handle auth routes - redirect authenticated users to appropriate dashboard
+  if (isAuthRoute && user) {
+    const redirectUrl = user.role === 'admin' ? '/admin/companies' : '/dashboard'
+    return NextResponse.redirect(new URL(redirectUrl, request.url))
+  }
+  
+  // Handle other public routes - redirect authenticated users to appropriate dashboard
+  if (isPublicRoute && user && pathname === '/') {
     const redirectUrl = user.role === 'admin' ? '/admin/companies' : '/dashboard'
     return NextResponse.redirect(new URL(redirectUrl, request.url))
   }
@@ -80,7 +91,6 @@ export function middleware(request: NextRequest) {
       }
     }
   }
-
 
   // Allow the request to continue
   return NextResponse.next()
