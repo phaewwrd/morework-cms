@@ -19,6 +19,7 @@ model User {
   role          String    @default("company") @db.VarChar(50)
 
   companies     Company[]
+  verificationTokens VerificationToken[]
 
   @@unique([email])
   @@map("users")
@@ -255,6 +256,18 @@ model Province {
   districts District[]
 
   @@map("provinces")
+}
+
+model VerificationToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  userId    String
+  expires   DateTime
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("verification_tokens")
 }
 
 // Enums

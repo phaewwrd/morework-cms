@@ -36,6 +36,7 @@ import {
 import { useCompanyPositions, useUserCompany } from "@/hooks/use-companies";
 import { useUpdateApplicationStatus } from "@/hooks/use-applications";
 import { parseSecureId } from "@/lib/hash";
+import { useVerifyEmail } from "@/hooks/use-auth";
 
 interface Position {
   id: number;
@@ -384,9 +385,7 @@ export default function CompanyDashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.pendingJobs}</div>
-              <p className="text-xs text-muted-foreground">
-                Pending positions
-              </p>
+              <p className="text-xs text-muted-foreground">Pending positions</p>
             </CardContent>
           </Card>
         </div>
@@ -521,8 +520,8 @@ export default function CompanyDashboardPage() {
                             position.status === "ACTIVE"
                               ? "outline"
                               : position.status === "PENDING"
-                              ? "secondary"
-                              : "destructive"
+                                ? "secondary"
+                                : "destructive"
                           }
                           className={
                             position.status === "ACTIVE"
