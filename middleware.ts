@@ -69,7 +69,7 @@ export function middleware(request: NextRequest) {
     (pathname === "/auth/login" || pathname === "/auth/register")
   ) {
     const redirectUrl =
-      user.role === "admin" ? "/admin/moreworks" : "/dashboard/companies";
+      user.role === "admin" ? "/admin/companies" : "/dashboard/companies";
     return NextResponse.redirect(new URL(redirectUrl, request.url));
   }
 
