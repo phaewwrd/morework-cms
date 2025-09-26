@@ -3,7 +3,6 @@
 import React from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
-import { useAuthGuard } from '@/hooks/use-auth-guard'
 
 // Create a client
 const queryClient = new QueryClient({
@@ -48,18 +47,10 @@ interface ProvidersProps {
   children: React.ReactNode
 }
 
-// Auth Guard Component
-function AuthGuard({ children }: { children: React.ReactNode }) {
-  useAuthGuard()
-  return <>{children}</>
-}
-
 export function Providers({ children }: ProvidersProps) {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthGuard>
-        {children}
-      </AuthGuard>
+      {children}
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   )

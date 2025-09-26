@@ -58,7 +58,7 @@ export function middleware(request: NextRequest) {
   // Handle auth routes - redirect authenticated users to appropriate dashboard
   if (isAuthRoute && user) {
     const redirectUrl =
-      user.role === "admin" ? "/admin/companies" : "/dashboard";
+      user.role === "admin" ? "/admin/companies" : "/dashboard/companies";
     return NextResponse.redirect(new URL(redirectUrl, request.url));
   }
 
