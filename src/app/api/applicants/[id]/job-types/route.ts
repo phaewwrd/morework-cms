@@ -1,18 +1,18 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getAuthUserAsync } from '@/lib/jwt'
-import { prisma } from '@/lib/prisma'
-import { 
-  handleApiError, 
-  createErrorResponse, 
-  createSuccessResponse, 
+import { NextRequest, NextResponse } from "next/server";
+import { getAuthUserAsync } from "@/lib/jwt";
+import { prisma } from "@/lib/prisma";
+import {
+  handleApiError,
+  createErrorResponse,
+  createSuccessResponse,
   ERROR_MESSAGES,
-  type ApiResponse 
-} from '@/lib/api-errors'
+  type ApiResponse,
+} from "@/lib/api-errors";
 
 interface RouteParams {
   params: Promise<{
-    id: string
-  }>
+    id: string;
+  }>;
 }
 
 // Get applicant's job types
@@ -21,30 +21,34 @@ export async function GET(
   { params }: RouteParams
 ): Promise<NextResponse<ApiResponse>> {
   try {
-    const user = await getAuthUserAsync(request)
+    const user = await getAuthUserAsync(request);
     if (!user) {
-      return createErrorResponse(ERROR_MESSAGES.UNAUTHORIZED, 401, 'UNAUTHORIZED')
+      return createErrorResponse(
+        ERROR_MESSAGES.UNAUTHORIZED,
+        401,
+        "UNAUTHORIZED"
+      );
     }
 
-    const { id } = await params
-    const applicantId = parseInt(id)
+    const { id } = await params;
+    const applicantId = parseInt(id);
 
     if (isNaN(applicantId)) {
-      return createErrorResponse('Invalid applicant ID', 400, 'INVALID_ID')
+      return createErrorResponse("Invalid applicant ID", 400, "INVALID_ID");
     }
 
     const jobTypes = await prisma.applicantsJobType.findMany({
       where: {
-        applicantId: applicantId
+        applicantId: applicantId,
       },
       include: {
-        jobType: true
-      }
-    })
+        jobType: true,
+      },
+    });
 
-    return createSuccessResponse(jobTypes)
+    return createSuccessResponse(jobTypes);
   } catch (error) {
-    return handleApiError(error, 'Applicant Job Types GET')
+    return handleApiError(error, "Applicant Job Types GET");
   }
 }
 
@@ -54,111 +58,66 @@ export async function POST(
   { params }: RouteParams
 ): Promise<NextResponse<ApiResponse>> {
   try {
-    const user = await getAuthUserAsync(request)
+    const user = await getAuthUserAsync(request);
     if (!user) {
-      return createErrorResponse(ERROR_MESSAGES.UNAUTHORIZED, 401, 'UNAUTHORIZED')
+      return createErrorResponse(
+        ERROR_MESSAGES.UNAUTHORIZED,
+        401,
+        "UNAUTHORIZED"
+      );
     }
 
-    const { id } = await params
-    const applicantId = parseInt(id)
+    const { id } = await params;
+    const applicantId = parseInt(id);
 
     if (isNaN(applicantId)) {
-      return createErrorResponse('Invalid applicant ID', 400, 'INVALID_ID')
+      return createErrorResponse("Invalid applicant ID", 400, "INVALID_ID");
     }
 
-    const body = await request.json()
-    const { jobTypeId } = body
+    const body = await request.json();
+    const { jobTypeId } = body;
 
     if (!jobTypeId || isNaN(parseInt(jobTypeId))) {
-      return createErrorResponse('Valid job type ID is required', 400, 'INVALID_JOB_TYPE_ID')
+      return createErrorResponse(
+        "Valid job type ID is required",
+        400,
+        "INVALID_JOB_TYPE_ID"
+      );
     }
 
     // Check if the association already exists
     const existingAssociation = await prisma.applicantsJobType.findFirst({
       where: {
         applicantId: applicantId,
-        jobTypeId: parseInt(jobTypeId)
-      }
-    })
+        jobTypeId: parseInt(jobTypeId),
+      },
+    });
 
     if (existingAssociation) {
-      return createErrorResponse('Job type already associated with this applicant', 409, 'DUPLICATE_ASSOCIATION')
+      return createErrorResponse(
+        "Job type already associated with this applicant",
+        409,
+        "DUPLICATE_ASSOCIATION"
+      );
     }
 
     const newAssociation = await prisma.applicantsJobType.create({
       data: {
         applicantId: applicantId,
-        jobTypeId: parseInt(jobTypeId)
+        jobTypeId: parseInt(jobTypeId),
       },
       include: {
-        jobType: true
-      }
-    })
-
-    return createSuccessResponse(newAssociation, 'Job type added successfully', 201)
-  } catch (error) {
-    return handleApiError(error, 'Applicant Job Types POST')
-  }
-}
-
-// Update all job types for applicant (replace existing with new ones)
-export async function PUT(
-  request: NextRequest,
-  { params }: RouteParams
-): Promise<NextResponse<ApiResponse>> {
-  try {
-    const user = await getAuthUserAsync(request)
-    if (!user) {
-      return createErrorResponse(ERROR_MESSAGES.UNAUTHORIZED, 401, 'UNAUTHORIZED')
-    }
-
-    const { id } = await params
-    const applicantId = parseInt(id)
-
-    if (isNaN(applicantId)) {
-      return createErrorResponse('Invalid applicant ID', 400, 'INVALID_ID')
-    }
-
-    const body = await request.json()
-    const { jobTypeIds } = body
-
-    if (!Array.isArray(jobTypeIds)) {
-      return createErrorResponse('Job type IDs must be an array', 400, 'INVALID_JOB_TYPE_IDS')
-    }
-
-    // Validate all job type IDs
-    const validJobTypeIds = jobTypeIds.filter(id => !isNaN(parseInt(id))).map(id => parseInt(id))
-
-    // Delete existing associations
-    await prisma.applicantsJobType.deleteMany({
-      where: {
-        applicantId: applicantId
-      }
-    })
-
-    // Create new associations
-    if (validJobTypeIds.length > 0) {
-      await prisma.applicantsJobType.createMany({
-        data: validJobTypeIds.map(jobTypeId => ({
-          applicantId: applicantId,
-          jobTypeId: jobTypeId
-        }))
-      })
-    }
-
-    // Fetch updated job types with related data
-    const updatedJobTypes = await prisma.applicantsJobType.findMany({
-      where: {
-        applicantId: applicantId
+        jobType: true,
       },
-      include: {
-        jobType: true
-      }
-    })
+    });
 
-    return createSuccessResponse(updatedJobTypes, 'Job types updated successfully')
+    return createSuccessResponse(
+      newAssociation,
+      "Job type added successfully",
+      201
+    );
   } catch (error) {
-    return handleApiError(error, 'Applicant Job Types PUT')
+    return handleApiError(error, "Applicant Job Types POST");
   }
 }
 
@@ -168,34 +127,42 @@ export async function DELETE(
   { params }: RouteParams
 ): Promise<NextResponse<ApiResponse>> {
   try {
-    const user = await getAuthUserAsync(request)
+    const user = await getAuthUserAsync(request);
     if (!user) {
-      return createErrorResponse(ERROR_MESSAGES.UNAUTHORIZED, 401, 'UNAUTHORIZED')
+      return createErrorResponse(
+        ERROR_MESSAGES.UNAUTHORIZED,
+        401,
+        "UNAUTHORIZED"
+      );
     }
 
-    const { id } = await params
-    const applicantId = parseInt(id)
+    const { id } = await params;
+    const applicantId = parseInt(id);
 
     if (isNaN(applicantId)) {
-      return createErrorResponse('Invalid applicant ID', 400, 'INVALID_ID')
+      return createErrorResponse("Invalid applicant ID", 400, "INVALID_ID");
     }
 
-    const url = new URL(request.url)
-    const jobTypeId = url.searchParams.get('jobTypeId')
+    const url = new URL(request.url);
+    const jobTypeId = url.searchParams.get("jobTypeId");
 
     if (!jobTypeId || isNaN(parseInt(jobTypeId))) {
-      return createErrorResponse('Valid job type ID is required', 400, 'INVALID_JOB_TYPE_ID')
+      return createErrorResponse(
+        "Valid job type ID is required",
+        400,
+        "INVALID_JOB_TYPE_ID"
+      );
     }
 
     await prisma.applicantsJobType.deleteMany({
       where: {
         applicantId: applicantId,
-        jobTypeId: parseInt(jobTypeId)
-      }
-    })
+        jobTypeId: parseInt(jobTypeId),
+      },
+    });
 
-    return createSuccessResponse({}, 'Job type removed successfully')
+    return createSuccessResponse({}, "Job type removed successfully");
   } catch (error) {
-    return handleApiError(error, 'Applicant Job Types DELETE')
+    return handleApiError(error, "Applicant Job Types DELETE");
   }
 }

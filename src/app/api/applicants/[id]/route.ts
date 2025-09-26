@@ -1,13 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { applicantUpdateSchema, type ApiResponse } from '@/lib/validations'
-import { getAuthUserAsync } from '@/lib/jwt'
-import { prisma } from '@/lib/prisma'
-import { upsertApplicantData } from '@/hooks/use-applicants'
+import { NextRequest, NextResponse } from "next/server";
+import { applicantUpdateSchema, type ApiResponse } from "@/lib/validations";
+import { getAuthUserAsync } from "@/lib/jwt";
+import { prisma } from "@/lib/prisma";
+import { upsertApplicantData } from "@/hooks/use-applicants";
 
 interface RouteParams {
   params: Promise<{
-    id: string
-  }>
+    id: string;
+  }>;
 }
 
 export async function GET(
@@ -16,39 +16,45 @@ export async function GET(
 ): Promise<NextResponse<ApiResponse>> {
   try {
     // Get authenticated user
-    const user = await getAuthUserAsync(request)
+    const user = await getAuthUserAsync(request);
     if (!user) {
-      return NextResponse.json({
-        success: false,
-        message: 'Authentication required',
-        error: 'Please login to access applicant'
-      }, { status: 401 })
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Authentication required",
+          error: "Please login to access applicant",
+        },
+        { status: 401 }
+      );
     }
 
-    const { id } = await params
-    const applicantId = parseInt(id)
+    const { id } = await params;
+    const applicantId = parseInt(id);
 
     if (isNaN(applicantId)) {
-      return NextResponse.json({
-        success: false,
-        message: 'Invalid applicant ID',
-        error: 'Applicant ID must be a number'
-      }, { status: 400 })
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid applicant ID",
+          error: "Applicant ID must be a number",
+        },
+        { status: 400 }
+      );
     }
 
     // Check if user is a company and get company-specific data
-    if (user.role === 'COMPANY' && user.companyId) {
+    if (user.role === "COMPANY" && user.companyId) {
       // Get all positions for this company
       const positions = await prisma.position.findMany({
         where: {
-          companyId: user.companyId
+          companyId: user.companyId,
         },
         select: {
-          id: true
-        }
-      })
+          id: true,
+        },
+      });
 
-      const positionIds = positions.map(p => p.id)
+      const positionIds = positions.map((p) => p.id);
 
       // Get the specific applicant with their applications to this company
       const applicant = await prisma.applicant.findFirst({
@@ -57,105 +63,108 @@ export async function GET(
           positions: {
             some: {
               positionId: {
-                in: positionIds
-              }
-            }
-          }
+                in: positionIds,
+              },
+            },
+          },
         },
         include: {
           positions: {
             where: {
               positionId: {
-                in: positionIds
-              }
+                in: positionIds,
+              },
             },
             include: {
               position: {
                 select: {
                   id: true,
                   title: true,
-                  jobDescription: true
-                }
-              }
+                  jobDescription: true,
+                },
+              },
             },
             orderBy: {
-              appliedAt: 'desc'
-            }
+              appliedAt: "desc",
+            },
           },
           workExperiences: {
             orderBy: {
-              startDate: 'desc'
-            }
+              startDate: "desc",
+            },
           },
           educations: {
             include: {
-              educationLevel: true
+              educationLevel: true,
             },
             orderBy: {
-              graduationYear: 'desc'
-            }
+              graduationYear: "desc",
+            },
           },
           documents: {
             where: {
               documentType: {
-                in: ['RESUME', 'COVER_LETTER']
-              }
-            }
-          }
-        }
-      })
+                in: ["RESUME", "COVER_LETTER"],
+              },
+            },
+          },
+        },
+      });
 
       if (!applicant) {
-        return NextResponse.json({
-          success: false,
-          message: 'Applicant not found',
-          error: 'No applicant found or not authorized'
-        }, { status: 404 })
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Applicant not found",
+            error: "No applicant found or not authorized",
+          },
+          { status: 404 }
+        );
       }
 
       // Transform the data to match frontend expectations
-    //   const transformedApplicant = {
-    //     id: applicant.id,
-    //     firstName: applicant.firstName,
-    //     lastName: applicant.lastName,
-    //     email: applicant.email,
-    //     phone: applicant.phone,
-    //     experience: applicant.workExperiences.length > 0 
-    //       ? applicant.workExperiences.reduce((total, exp) => {
-    //           const startYear = new Date(exp.startDate).getFullYear()
-    //           const endYear = exp.endDate ? new Date(exp.endDate).getFullYear() : new Date().getFullYear()
-    //           return total + (endYear - startYear)
-    //         }, 0)
-    //       : 0,
-    //     expectedSalary: null, // This field doesn't exist in the current schema
-    //     skills: applicant.workExperiences.map(exp => exp.description).join('; '),
-    //     education: applicant.educations.map(edu => 
-    //       `${edu.field} at ${edu.institution} (${edu.graduationYear})`
-    //     ).join('; '),
-    //     applications: applicant.positions.map(pos => ({
-    //       id: pos.id,
-    //       status: pos.status,
-    //       appliedAt: pos.appliedAt.toISOString(),
-    //       coverLetter: applicant.documents.find(doc => doc.documentType === 'COVER_LETTER')?.description || null,
-    //       resumeUrl: applicant.documents.find(doc => doc.documentType === 'RESUME')?.filePath || null,
-    //       position: {
-    //         id: pos.position.id,
-    //         title: pos.position.title,
-    //         description: pos.position.jobDescription
-    //       }
-    //     }))
-    //   }
+      //   const transformedApplicant = {
+      //     id: applicant.id,
+      //     firstName: applicant.firstName,
+      //     lastName: applicant.lastName,
+      //     email: applicant.email,
+      //     phone: applicant.phone,
+      //     experience: applicant.workExperiences.length > 0
+      //       ? applicant.workExperiences.reduce((total, exp) => {
+      //           const startYear = new Date(exp.startDate).getFullYear()
+      //           const endYear = exp.endDate ? new Date(exp.endDate).getFullYear() : new Date().getFullYear()
+      //           return total + (endYear - startYear)
+      //         }, 0)
+      //       : 0,
+      //     expectedSalary: null, // This field doesn't exist in the current schema
+      //     skills: applicant.workExperiences.map(exp => exp.description).join('; '),
+      //     education: applicant.educations.map(edu =>
+      //       `${edu.field} at ${edu.institution} (${edu.graduationYear})`
+      //     ).join('; '),
+      //     applications: applicant.positions.map(pos => ({
+      //       id: pos.id,
+      //       status: pos.status,
+      //       appliedAt: pos.appliedAt.toISOString(),
+      //       coverLetter: applicant.documents.find(doc => doc.documentType === 'COVER_LETTER')?.description || null,
+      //       resumeUrl: applicant.documents.find(doc => doc.documentType === 'RESUME')?.filePath || null,
+      //       position: {
+      //         id: pos.position.id,
+      //         title: pos.position.title,
+      //         description: pos.position.jobDescription
+      //       }
+      //     }))
+      //   }
 
       return NextResponse.json({
         success: true,
-        message: 'Applicant retrieved successfully',
-        data: applicant
-      })
+        message: "Applicant retrieved successfully",
+        data: applicant,
+      });
     }
 
     // Default behavior for admin users - get full applicant data with all relationships
     // Use raw query to handle invalid datetime values
-    const applicantResult = await prisma.$queryRaw`
+    const applicantResult = (await prisma.$queryRaw`
       SELECT 
         a.*,
         CASE 
@@ -169,37 +178,49 @@ export async function GET(
       FROM applicants a 
       WHERE a.id = ${applicantId}
       LIMIT 1
-    ` as any[]
+    `) as any[];
 
     if (!applicantResult || applicantResult.length === 0) {
-      return NextResponse.json({
-        success: false,
-        message: 'Applicant not found',
-        error: 'No applicant found with the given ID'
-      }, { status: 404 })
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Applicant not found",
+          error: "No applicant found with the given ID",
+        },
+        { status: 404 }
+      );
     }
 
-    const applicantData = applicantResult[0]
+    const applicantData = applicantResult[0];
 
     // Get related data separately to avoid datetime issues
-    const [addresses, educations, workExperiencesResult, trainings, documents, positions, socialMedia, jobTypes] = await Promise.all([
+    const [
+      addresses,
+      educations,
+      workExperiencesResult,
+      trainings,
+      documents,
+      positions,
+      socialMedia,
+      jobTypes,
+    ] = await Promise.all([
       // Addresses
       prisma.applicantAddress.findMany({
         where: { applicantId },
         include: {
           district: {
             include: {
-              province: true
-            }
-          }
-        }
+              province: true,
+            },
+          },
+        },
       }),
       // Educations
       prisma.applicantEducation.findMany({
         where: { applicantId },
         include: {
-          educationLevel: true
-        }
+          educationLevel: true,
+        },
       }),
       // Work Experiences - handle datetime issues
       prisma.$queryRaw`
@@ -218,11 +239,11 @@ export async function GET(
       `,
       // Trainings
       prisma.applicantTraining.findMany({
-        where: { applicantId }
+        where: { applicantId },
       }),
       // Documents
       prisma.applicantDocument.findMany({
-        where: { applicantId }
+        where: { applicantId },
       }),
       // Positions
       prisma.applicantPosition.findMany({
@@ -230,28 +251,28 @@ export async function GET(
         include: {
           position: {
             include: {
-              company: true
-            }
-          }
-        }
+              company: true,
+            },
+          },
+        },
       }),
       // Social Media
       prisma.socialMedia.findMany({
-        where: { applicantId }
+        where: { applicantId },
       }),
       // Job Types
       prisma.applicantsJobType.findMany({
         where: {
-          applicantId: applicantId
+          applicantId: applicantId,
         },
         include: {
-          jobType: true
-        }
-      })
-    ])
+          jobType: true,
+        },
+      }),
+    ]);
 
     // Convert work experiences result to proper array
-    const workExperiences = workExperiencesResult as any[]
+    const workExperiences = workExperiencesResult as any[];
 
     // Combine all data
     const applicantWithJobTypes = {
@@ -263,153 +284,72 @@ export async function GET(
       documents,
       positions,
       socialMedia,
-      jobTypes
-    }
+      jobTypes,
+    };
 
     if (!applicantWithJobTypes) {
-      return NextResponse.json({
-        success: false,
-        message: 'Applicant not found',
-        error: 'No applicant found with the given ID'
-      }, { status: 404 })
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Applicant not found",
+          error: "No applicant found with the given ID",
+        },
+        { status: 404 }
+      );
     }
-    
+
     return NextResponse.json({
       success: true,
-      message: 'Applicant retrieved successfully',
-      data: applicantWithJobTypes
-    })
-    
+      message: "Applicant retrieved successfully",
+      data: applicantWithJobTypes,
+    });
   } catch (error) {
-    console.error('Get applicant error:', error)
-    
-    return NextResponse.json({
-      success: false,
-      message: 'Failed to get applicant',
-      error: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 })
+    console.error("Get applicant error:", error);
+
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Failed to get applicant",
+        error: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 }
+    );
   }
 }
 
-// export async function PATCH(
-//   request: NextRequest,
-//   { params }: RouteParams
-// ): Promise<NextResponse<ApiResponse>> {
-//   try {
-//     // Get authenticated user
-//     const user = await getAuthUserAsync(request)
-//     if (!user) {
-//       return NextResponse.json({
-//         success: false,
-//         message: 'Authentication required',
-//         error: 'Please login to update applicant'
-//       }, { status: 401 })
-//     }
-
-//     const { id } = await params
-//     const applicantId = parseInt(id)
-
-//     if (isNaN(applicantId)) {
-//       return NextResponse.json({
-//         success: false,
-//         message: 'Invalid applicant ID',
-//         error: 'Applicant ID must be a number'
-//       }, { status: 400 })
-//     }
-
-//     const body = await request.json()
-    
-//     // Validate request data
-//     const validatedData = applicantUpdateSchema.parse(body)
-    
-//     // Update applicant
-//     const updatedApplicant = await prisma.applicant.update({
-//       where: { id: applicantId },
-//       data: validatedData,
-//       include: {
-//         addresses: {
-//           include: {
-//             district: {
-//               include: {
-//                 province: true
-//               }
-//             }
-//           }
-//         },
-//         educations: {
-//           include: {
-//             educationLevel: true
-//           }
-//         },
-//         workExperiences: true,
-//         trainings: true,
-//         documents: true,
-//         positions: {
-//           include: {
-//             position: {
-//               include: {
-//                 company: true
-//               }
-//             }
-//           }
-//         },
-//         socialMedia: true
-//       }
-//     })
-    
-//     return NextResponse.json({
-//       success: true,
-//       message: 'Applicant updated successfully',
-//       data: updatedApplicant
-//     })
-    
-//   } catch (error) {
-//     console.error('Update applicant error:', error)
-    
-//     if (error instanceof Error && error.name === 'ZodError') {
-//       return NextResponse.json({
-//         success: false,
-//         message: 'Validation failed',
-//         error: error.message
-//       }, { status: 400 })
-//     }
-    
-//     if (error instanceof Error && error.message.includes('Record to update not found')) {
-//       return NextResponse.json({
-//         success: false,
-//         message: 'Applicant not found',
-//         error: 'No applicant found with the given ID'
-//       }, { status: 404 })
-//     }
-    
-//     return NextResponse.json({
-//       success: false,
-//       message: 'Applicant update failed',
-//       error: error instanceof Error ? error.message : 'Unknown error'
-//     }, { status: 500 })
-//   }
-// }
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
   try {
-        const { id } = await params
+    const { id } = await params;
 
     const applicantId = parseInt(id, 10);
     if (isNaN(applicantId)) {
-      return new Response(JSON.stringify({ success: false, error: "Invalid applicant ID" }), { status: 400, headers: { "Content-Type": "application/json" } });
+      return new Response(
+        JSON.stringify({ success: false, error: "Invalid applicant ID" }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
     }
 
     const body = await req.json();
+    console.log(body);
 
     await upsertApplicantData(prisma, applicantId, body);
 
-    return new Response(JSON.stringify({ success: true, data: null }), { status: 200, headers: { "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({ success: true, data: null }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
   } catch (error) {
     console.error(error);
     const errorMessage = error instanceof Error ? error.message : String(error);
-    return new Response(JSON.stringify({ success: false, error: errorMessage }), { status: 500, headers: { "Content-Type": "application/json" } });
+    return new Response(
+      JSON.stringify({ success: false, error: errorMessage }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
   }
 }
-
 
 export async function DELETE(
   request: NextRequest,
@@ -417,51 +357,65 @@ export async function DELETE(
 ): Promise<NextResponse<ApiResponse>> {
   try {
     // Get authenticated user
-    const user = await getAuthUserAsync(request)
+    const user = await getAuthUserAsync(request);
     if (!user) {
-      return NextResponse.json({
-        success: false,
-        message: 'Authentication required',
-        error: 'Please login to delete applicant'
-      }, { status: 401 })
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Authentication required",
+          error: "Please login to delete applicant",
+        },
+        { status: 401 }
+      );
     }
 
-    const { id } = await params
-    const applicantId = parseInt(id)
+    const { id } = await params;
+    const applicantId = parseInt(id);
 
     if (isNaN(applicantId)) {
-      return NextResponse.json({
-        success: false,
-        message: 'Invalid applicant ID',
-        error: 'Applicant ID must be a number'
-      }, { status: 400 })
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid applicant ID",
+          error: "Applicant ID must be a number",
+        },
+        { status: 400 }
+      );
     }
-    
+
     // Delete applicant
     await prisma.applicant.delete({
-      where: { id: applicantId }
-    })
-    
+      where: { id: applicantId },
+    });
+
     return NextResponse.json({
       success: true,
-      message: 'Applicant deleted successfully'
-    })
-    
+      message: "Applicant deleted successfully",
+    });
   } catch (error) {
-    console.error('Delete applicant error:', error)
-    
-    if (error instanceof Error && error.message.includes('Record to delete does not exist')) {
-      return NextResponse.json({
-        success: false,
-        message: 'Applicant not found',
-        error: 'No applicant found with the given ID'
-      }, { status: 404 })
+    console.error("Delete applicant error:", error);
+
+    if (
+      error instanceof Error &&
+      error.message.includes("Record to delete does not exist")
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Applicant not found",
+          error: "No applicant found with the given ID",
+        },
+        { status: 404 }
+      );
     }
-    
-    return NextResponse.json({
-      success: false,
-      message: 'Applicant deletion failed',
-      error: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 })
+
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Applicant deletion failed",
+        error: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 }
+    );
   }
 }
