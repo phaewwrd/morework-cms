@@ -91,7 +91,6 @@ export function middleware(request: NextRequest) {
       }
     }
   }
-  console.log("testsssssssssss")
 
   // Allow the request to continue
   return NextResponse.next()
