@@ -123,10 +123,20 @@ export default function MoreWorksPage() {
     const matchesSearch =
       applicant.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       applicant.lastName.toLowerCase().includes(searchTerm.toLowerCase());
+
     const matchesGender =
-      genderFilter === "" || applicant.gender === genderFilter;
+      genderFilter === "" ||
+      genderFilter === "ALL" ||
+      applicant.gender === genderFilter;
+
+    // Check if applicant has any positions with the selected status
     const matchesStatus =
-      statusFilter === "" || applicant.applicationStatus === statusFilter;
+      statusFilter === "" ||
+      statusFilter === "ALL" ||
+      (applicant.positions &&
+        applicant.positions.some(
+          (position) => position.applicationStatus === statusFilter
+        ));
 
     return matchesSearch && matchesGender && matchesStatus;
   });
