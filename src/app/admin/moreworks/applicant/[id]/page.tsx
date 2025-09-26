@@ -34,6 +34,8 @@ import {
   GraduationCap,
   FileText,
   Building,
+  Plus,
+  Trash2,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import AdminNavbar from "@/components/AdminNavbar";
@@ -57,6 +59,10 @@ export default function ApplicantDetailPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<Partial<ApplicantDetail>>({});
   const [selectedJobTypes, setSelectedJobTypes] = useState<number[]>([]);
+  const [addresses, setAddresses] = useState<any[]>([]);
+  const [educations, setEducations] = useState<any[]>([]);
+  const [workExperiences, setWorkExperiences] = useState<any[]>([]);
+  const [trainings, setTrainings] = useState<any[]>([]);
 
   // Initialize form data when applicant data loads
   useEffect(() => {
@@ -73,11 +79,113 @@ export default function ApplicantDetailPage() {
       });
       // Initialize selected job types
       setSelectedJobTypes(applicant.jobTypes?.map((jt) => jt.jobType.id) || []);
+
+      // Initialize addresses, educations, work experiences, and trainings
+      setAddresses(applicant.addresses || []);
+      setEducations(applicant.educations || []);
+      setWorkExperiences(applicant.workExperiences || []);
+      setTrainings(applicant.trainings || []);
     }
   }, [applicant]);
 
   const handleInputChange = (field: string, value: string | number) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  // Helper functions for managing array data
+  const addAddress = () => {
+    const newAddress = {
+      id: null,
+      address: "",
+      districtId: 1, // Default to district ID 1
+      district: null,
+    };
+    setAddresses((prev) => [...prev, newAddress]);
+  };
+
+  const updateAddress = (index: number, field: string, value: any) => {
+    setAddresses((prev) => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: value };
+      return updated;
+    });
+  };
+
+  const removeAddress = (index: number) => {
+    setAddresses((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const addEducation = () => {
+    const newEducation = {
+      id: null,
+      educationlevelId: 1, // Default to education level ID 1
+      institution: "",
+      field: "",
+      graduationYear: new Date().getFullYear(),
+      gpa: 0,
+      educationLevel: null,
+    };
+    setEducations((prev) => [...prev, newEducation]);
+  };
+
+  const updateEducation = (index: number, field: string, value: any) => {
+    setEducations((prev) => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: value };
+      return updated;
+    });
+  };
+
+  const removeEducation = (index: number) => {
+    setEducations((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const addWorkExperience = () => {
+    const currentDate = new Date().toISOString().split("T")[0];
+    const newWorkExperience = {
+      id: null,
+      company: "",
+      position: "",
+      startDate: currentDate,
+      endDate: null,
+      description: "",
+      currentPosition: false,
+    };
+    setWorkExperiences((prev) => [...prev, newWorkExperience]);
+  };
+
+  const updateWorkExperience = (index: number, field: string, value: any) => {
+    setWorkExperiences((prev) => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: value };
+      return updated;
+    });
+  };
+
+  const removeWorkExperience = (index: number) => {
+    setWorkExperiences((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const addTraining = () => {
+    const newTraining = {
+      id: null,
+      title: "",
+      description: "",
+      trainingYear: new Date().getFullYear(),
+    };
+    setTrainings((prev) => [...prev, newTraining]);
+  };
+
+  const updateTraining = (index: number, field: string, value: any) => {
+    setTrainings((prev) => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: value };
+      return updated;
+    });
+  };
+
+  const removeTraining = (index: number) => {
+    setTrainings((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSave = async () => {
@@ -93,6 +201,35 @@ export default function ApplicantDetailPage() {
         start_working_date: formData.start_working_date,
         preffered_location: formData.preffered_location,
         preferred_job_type: selectedJobTypes,
+        // Include additional sections with proper field names expected by the API
+        current_address: addresses.map((addr) => ({
+          id: addr.id,
+          address: addr.address,
+          district_id: addr.districtId,
+        })),
+        educations: educations.map((edu) => ({
+          id: edu.id,
+          educationlevelId: edu.educationlevelId,
+          institution: edu.institution,
+          field: edu.field,
+          graduationYear: edu.graduationYear,
+          gpa: edu.gpa,
+        })),
+        workExperiences: workExperiences.map((exp) => ({
+          id: exp.id,
+          company: exp.company,
+          position: exp.position,
+          startDate: exp.startDate,
+          endDate: exp.endDate,
+          description: exp.description,
+          currentPosition: exp.currentPosition,
+        })),
+        trainings: trainings.map((train) => ({
+          id: train.id,
+          title: train.title,
+          description: train.description,
+          trainingYear: train.trainingYear,
+        })),
       };
 
       // Update applicant information using the existing API
@@ -138,6 +275,12 @@ export default function ApplicantDetailPage() {
         preffered_location: applicant.preffered_location,
       });
       setSelectedJobTypes(applicant.jobTypes?.map((jt) => jt.jobType.id) || []);
+
+      // Reset additional sections to original values
+      setAddresses(applicant.addresses || []);
+      setEducations(applicant.educations || []);
+      setWorkExperiences(applicant.workExperiences || []);
+      setTrainings(applicant.trainings || []);
     }
     setIsEditing(false);
   };
@@ -460,127 +603,616 @@ export default function ApplicantDetailPage() {
               </CardContent>
             </Card>
 
-            {/* Addresses - Read Only */}
+            {/* Addresses - Now Editable */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <MapPin className="h-5 w-5" />
                   Addresses
+                  {isEditing && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={addAddress}
+                      className="ml-auto"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Add Address
+                    </Button>
+                  )}
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {applicant.addresses.length > 0 ? (
+                {isEditing ? (
                   <div className="space-y-3">
-                    {applicant.addresses.map((address) => (
-                      <div key={address.id} className="p-3 border rounded-lg">
-                        <p className="font-medium">{address.address}</p>
-                        <p className="text-sm text-gray-600">
-                          {address.district.title},{" "}
-                          {address.district.province.title}
-                        </p>
+                    {addresses.map((address, index) => (
+                      <div
+                        key={index}
+                        className="p-3 border rounded-lg space-y-3"
+                      >
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-medium text-sm">
+                            Address {index + 1}
+                          </h4>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => removeAddress(index)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-500">
+                            Address
+                          </label>
+                          <Input
+                            type="text"
+                            value={address.address || ""}
+                            onChange={(e) =>
+                              updateAddress(index, "address", e.target.value)
+                            }
+                            placeholder="Enter address"
+                            className="mt-1"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-500">
+                            District ID
+                          </label>
+                          <Input
+                            type="number"
+                            value={address.districtId || 1}
+                            onChange={(e) =>
+                              updateAddress(
+                                index,
+                                "districtId",
+                                parseInt(e.target.value) || 1
+                              )
+                            }
+                            placeholder="Enter district ID"
+                            className="mt-1"
+                            min="1"
+                          />
+                        </div>
                       </div>
                     ))}
+                    {addresses.length === 0 && (
+                      <p className="text-gray-500">
+                        No addresses. Click "Add Address" to add one.
+                      </p>
+                    )}
                   </div>
                 ) : (
-                  <p className="text-gray-500">No addresses on file</p>
+                  <>
+                    {applicant.addresses.length > 0 ? (
+                      <div className="space-y-3">
+                        {applicant.addresses.map((address) => (
+                          <div
+                            key={address.id}
+                            className="p-3 border rounded-lg"
+                          >
+                            <p className="font-medium">{address.address}</p>
+                            <p className="text-sm text-gray-600">
+                              {address.district.title},{" "}
+                              {address.district.province.title}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-gray-500">No addresses on file</p>
+                    )}
+                  </>
                 )}
               </CardContent>
             </Card>
 
-            {/* Education - Read Only */}
+            {/* Education - Now Editable */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <GraduationCap className="h-5 w-5" />
                   Education
+                  {isEditing && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={addEducation}
+                      className="ml-auto"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Add Education
+                    </Button>
+                  )}
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {applicant.educations.length > 0 ? (
+                {isEditing ? (
                   <div className="space-y-3">
-                    {applicant.educations.map((education) => (
-                      <div key={education.id} className="p-3 border rounded-lg">
-                        <p className="font-medium">{education.field}</p>
-                        <p className="text-sm text-gray-600">
-                          {education.institution}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          {education.educationLevel.title} • Graduated{" "}
-                          {education.graduationYear} • GPA: {education.gpa}
-                        </p>
+                    {educations.map((education, index) => (
+                      <div
+                        key={index}
+                        className="p-3 border rounded-lg space-y-3"
+                      >
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-medium text-sm">
+                            Education {index + 1}
+                          </h4>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => removeEducation(index)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="text-sm font-medium text-gray-500">
+                              Field of Study
+                            </label>
+                            <Input
+                              type="text"
+                              value={education.field || ""}
+                              onChange={(e) =>
+                                updateEducation(index, "field", e.target.value)
+                              }
+                              placeholder="Enter field of study"
+                              className="mt-1"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-gray-500">
+                              Institution
+                            </label>
+                            <Input
+                              type="text"
+                              value={education.institution || ""}
+                              onChange={(e) =>
+                                updateEducation(
+                                  index,
+                                  "institution",
+                                  e.target.value
+                                )
+                              }
+                              placeholder="Enter institution"
+                              className="mt-1"
+                            />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-3 gap-3">
+                          <div>
+                            <label className="text-sm font-medium text-gray-500">
+                              Education Level ID
+                            </label>
+                            <Input
+                              type="number"
+                              value={education.educationlevelId || 1}
+                              onChange={(e) =>
+                                updateEducation(
+                                  index,
+                                  "educationlevelId",
+                                  parseInt(e.target.value) || 1
+                                )
+                              }
+                              placeholder="Enter level ID"
+                              className="mt-1"
+                              min="1"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-gray-500">
+                              Graduation Year
+                            </label>
+                            <Input
+                              type="number"
+                              value={education.graduationYear || ""}
+                              onChange={(e) =>
+                                updateEducation(
+                                  index,
+                                  "graduationYear",
+                                  parseInt(e.target.value) ||
+                                    new Date().getFullYear()
+                                )
+                              }
+                              placeholder="Enter year"
+                              className="mt-1"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-gray-500">
+                              GPA
+                            </label>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={education.gpa || ""}
+                              onChange={(e) =>
+                                updateEducation(
+                                  index,
+                                  "gpa",
+                                  parseFloat(e.target.value) || 0
+                                )
+                              }
+                              placeholder="Enter GPA"
+                              className="mt-1"
+                            />
+                          </div>
+                        </div>
                       </div>
                     ))}
+                    {educations.length === 0 && (
+                      <p className="text-gray-500">
+                        No education records. Click "Add Education" to add one.
+                      </p>
+                    )}
                   </div>
                 ) : (
-                  <p className="text-gray-500">No education history on file</p>
+                  <>
+                    {applicant.educations.length > 0 ? (
+                      <div className="space-y-3">
+                        {applicant.educations.map((education) => (
+                          <div
+                            key={education.id}
+                            className="p-3 border rounded-lg"
+                          >
+                            <p className="font-medium">{education.field}</p>
+                            <p className="text-sm text-gray-600">
+                              {education.institution}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              {education.educationLevel.title} • Graduated{" "}
+                              {education.graduationYear} • GPA: {education.gpa}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-gray-500">
+                        No education history on file
+                      </p>
+                    )}
+                  </>
                 )}
               </CardContent>
             </Card>
 
-            {/* Work Experience - Read Only */}
+            {/* Work Experience - Now Editable */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Briefcase className="h-5 w-5" />
                   Work Experience
+                  {isEditing && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={addWorkExperience}
+                      className="ml-auto"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Add Experience
+                    </Button>
+                  )}
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {applicant.workExperiences.length > 0 ? (
+                {isEditing ? (
                   <div className="space-y-3">
-                    {applicant.workExperiences.map((experience) => (
+                    {workExperiences.map((experience, index) => (
                       <div
-                        key={experience.id}
-                        className="p-3 border rounded-lg"
+                        key={index}
+                        className="p-3 border rounded-lg space-y-3"
                       >
                         <div className="flex items-center justify-between">
-                          <p className="font-medium">{experience.position}</p>
-                          {experience.currentPosition && (
-                            <Badge variant="secondary">Current</Badge>
-                          )}
+                          <h4 className="font-medium text-sm">
+                            Experience {index + 1}
+                          </h4>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => removeWorkExperience(index)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
-                        <p className="text-sm text-gray-600">
-                          {experience.company}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          {formatDateForDisplay(experience.startDate)} -{" "}
-                          {experience.endDate
-                            ? formatDateForDisplay(experience.endDate)
-                            : "Present"}
-                        </p>
-                        <p className="text-sm mt-2">{experience.description}</p>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="text-sm font-medium text-gray-500">
+                              Position
+                            </label>
+                            <Input
+                              type="text"
+                              value={experience.position || ""}
+                              onChange={(e) =>
+                                updateWorkExperience(
+                                  index,
+                                  "position",
+                                  e.target.value
+                                )
+                              }
+                              placeholder="Enter position"
+                              className="mt-1"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-gray-500">
+                              Company
+                            </label>
+                            <Input
+                              type="text"
+                              value={experience.company || ""}
+                              onChange={(e) =>
+                                updateWorkExperience(
+                                  index,
+                                  "company",
+                                  e.target.value
+                                )
+                              }
+                              placeholder="Enter company"
+                              className="mt-1"
+                            />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="text-sm font-medium text-gray-500">
+                              Start Date
+                            </label>
+                            <Input
+                              type="date"
+                              value={formatDateForInput(
+                                experience.startDate || ""
+                              )}
+                              onChange={(e) =>
+                                updateWorkExperience(
+                                  index,
+                                  "startDate",
+                                  e.target.value
+                                )
+                              }
+                              className="mt-1"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-gray-500">
+                              End Date
+                            </label>
+                            <Input
+                              type="date"
+                              value={formatDateForInput(
+                                experience.endDate || ""
+                              )}
+                              onChange={(e) =>
+                                updateWorkExperience(
+                                  index,
+                                  "endDate",
+                                  e.target.value || null
+                                )
+                              }
+                              className="mt-1"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-500">
+                            Description
+                          </label>
+                          <Input
+                            type="text"
+                            value={experience.description || ""}
+                            onChange={(e) =>
+                              updateWorkExperience(
+                                index,
+                                "description",
+                                e.target.value
+                              )
+                            }
+                            placeholder="Enter job description"
+                            className="mt-1"
+                          />
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id={`currentPosition-${index}`}
+                            checked={experience.currentPosition || false}
+                            onChange={(e) =>
+                              updateWorkExperience(
+                                index,
+                                "currentPosition",
+                                e.target.checked
+                              )
+                            }
+                            className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                          />
+                          <label
+                            htmlFor={`currentPosition-${index}`}
+                            className="text-sm font-medium text-gray-700"
+                          >
+                            Current Position
+                          </label>
+                        </div>
                       </div>
                     ))}
+                    {workExperiences.length === 0 && (
+                      <p className="text-gray-500">
+                        No work experience. Click "Add Experience" to add one.
+                      </p>
+                    )}
                   </div>
                 ) : (
-                  <p className="text-gray-500">No work experience on file</p>
+                  <>
+                    {applicant.workExperiences.length > 0 ? (
+                      <div className="space-y-3">
+                        {applicant.workExperiences.map((experience) => (
+                          <div
+                            key={experience.id}
+                            className="p-3 border rounded-lg"
+                          >
+                            <div className="flex items-center justify-between">
+                              <p className="font-medium">
+                                {experience.position}
+                              </p>
+                              {experience.currentPosition && (
+                                <Badge variant="secondary">Current</Badge>
+                              )}
+                            </div>
+                            <p className="text-sm text-gray-600">
+                              {experience.company}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              {formatDateForDisplay(experience.startDate)} -{" "}
+                              {experience.endDate
+                                ? formatDateForDisplay(experience.endDate)
+                                : "Present"}
+                            </p>
+                            <p className="text-sm mt-2">
+                              {experience.description}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-gray-500">
+                        No work experience on file
+                      </p>
+                    )}
+                  </>
                 )}
               </CardContent>
             </Card>
 
-            {/* Trainings - Read Only */}
+            {/* Trainings - Now Editable */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <FileText className="h-5 w-5" />
                   Trainings
+                  {isEditing && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={addTraining}
+                      className="ml-auto"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Add Training
+                    </Button>
+                  )}
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {applicant.trainings.length > 0 ? (
+                {isEditing ? (
                   <div className="space-y-3">
-                    {applicant.trainings.map((training) => (
-                      <div key={training.id} className="p-3 border rounded-lg">
-                        <p className="font-medium">{training.title}</p>
-                        <p className="text-sm text-gray-600">
-                          Year: {training.trainingYear}
-                        </p>
-                        <p className="text-sm mt-2">{training.description}</p>
+                    {trainings.map((training, index) => (
+                      <div
+                        key={index}
+                        className="p-3 border rounded-lg space-y-3"
+                      >
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-medium text-sm">
+                            Training {index + 1}
+                          </h4>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => removeTraining(index)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-500">
+                            Training Title
+                          </label>
+                          <Input
+                            type="text"
+                            value={training.title || ""}
+                            onChange={(e) =>
+                              updateTraining(index, "title", e.target.value)
+                            }
+                            placeholder="Enter training title"
+                            className="mt-1"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-500">
+                            Description
+                          </label>
+                          <Input
+                            type="text"
+                            value={training.description || ""}
+                            onChange={(e) =>
+                              updateTraining(
+                                index,
+                                "description",
+                                e.target.value
+                              )
+                            }
+                            placeholder="Enter training description"
+                            className="mt-1"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-500">
+                            Training Year
+                          </label>
+                          <Input
+                            type="number"
+                            value={training.trainingYear || ""}
+                            onChange={(e) =>
+                              updateTraining(
+                                index,
+                                "trainingYear",
+                                parseInt(e.target.value) ||
+                                  new Date().getFullYear()
+                              )
+                            }
+                            placeholder="Enter year"
+                            className="mt-1"
+                          />
+                        </div>
                       </div>
                     ))}
+                    {trainings.length === 0 && (
+                      <p className="text-gray-500">
+                        No training records. Click "Add Training" to add one.
+                      </p>
+                    )}
                   </div>
                 ) : (
-                  <p className="text-gray-500">No trainings on file</p>
+                  <>
+                    {applicant.trainings.length > 0 ? (
+                      <div className="space-y-3">
+                        {applicant.trainings.map((training) => (
+                          <div
+                            key={training.id}
+                            className="p-3 border rounded-lg"
+                          >
+                            <p className="font-medium">{training.title}</p>
+                            <p className="text-sm text-gray-600">
+                              Year: {training.trainingYear}
+                            </p>
+                            <p className="text-sm mt-2">
+                              {training.description}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-gray-500">No trainings on file</p>
+                    )}
+                  </>
                 )}
               </CardContent>
             </Card>

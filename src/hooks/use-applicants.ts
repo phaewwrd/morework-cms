@@ -346,34 +346,70 @@ export const upsertApplicantData = async (
     }
   }
 
-  if (current_address) {
-    for (const address of current_address) {
-      if (address.district_id) {
-        const existingAddress = await prisma.applicantAddress.findFirst({
-          where: {
-            applicantId: applicant.id,
-          },
-        });
+  if (current_address && Array.isArray(current_address)) {
+    const existingAddresses = await prisma.applicantAddress.findMany({
+      where: { applicantId: applicant.id },
+    });
+    const existingAddressIds = existingAddresses.map((a) => a.id);
+    const incomingAddressIds = new Set(
+      current_address.map((a) => a.id).filter((id) => id)
+    );
 
-        if (existingAddress) {
-          await prisma.applicantAddress.update({
-            where: {
-              id: existingAddress.id,
+    const addressesToCreate = current_address.filter((a) => !a.id);
+    const addressesToUpdate = current_address.filter(
+      (a) => a.id && existingAddressIds.includes(a.id)
+    );
+    const addressIdsToDelete = existingAddressIds.filter(
+      (id) => !incomingAddressIds.has(id)
+    );
+
+    const operations: any[] = [];
+
+    // Deletions
+    if (addressIdsToDelete.length > 0) {
+      operations.push(
+        prisma.applicantAddress.deleteMany({
+          where: {
+            id: {
+              in: addressIdsToDelete,
             },
-            data: {
-              districtId: parseInt(address.district_id),
-            },
-          });
-        } else {
-          await prisma.applicantAddress.create({
+          },
+        })
+      );
+    }
+
+    // Creations
+    if (addressesToCreate.length > 0) {
+      operations.push(
+        ...addressesToCreate.map((addr) =>
+          prisma.applicantAddress.create({
             data: {
               applicantId: applicant.id,
-              districtId: parseInt(address.district_id),
-              address: "-",
+              address: addr.address || "-",
+              districtId: addr.district_id || addr.districtId || 1,
             },
-          });
-        }
-      }
+          })
+        )
+      );
+    }
+
+    // Updates
+    if (addressesToUpdate.length > 0) {
+      operations.push(
+        ...addressesToUpdate.map((addr) =>
+          prisma.applicantAddress.update({
+            where: { id: addr.id },
+            data: {
+              address: addr.address || "-",
+              districtId: addr.district_id || addr.districtId || 1,
+            },
+          })
+        )
+      );
+    }
+
+    if (operations.length > 0) {
+      await prisma.$transaction(operations);
     }
   }
 
