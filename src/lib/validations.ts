@@ -69,7 +69,7 @@ export const companyUpdateSchema = companyCreateSchema.partial()
 export const positionCreateSchema = z.object({
   title: z.string().min(1, 'Job title is required').max(191, 'Job title too long'),
   jobDescription: z.string().min(1, 'Job description is required'),
-  companyId: z.number().int().positive('Invalid company ID'),
+  companyId: z.number().int().positive('Invalid company ID').optional(),
 })
 
 export const positionUpdateSchema = z.object({
