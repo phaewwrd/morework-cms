@@ -3,12 +3,17 @@ import { prisma } from '@/lib/prisma'
 import { getAuthUserAsync } from '@/lib/jwt'
 
 export async function GET(request: NextRequest) {
+  // Debug route disabled in production
+  if (process.env.NODE_ENV === 'production' && process.env.ENABLE_DEBUG_ROUTES !== 'true') {
+    return NextResponse.json(
+      { error: 'Debug routes are disabled in production' },
+      { status: 404 }
+    )
+  }
+
   try {
-    console.log('=== DEBUG INFO ===')
-    
     // Check authentication
     const user = await getAuthUserAsync(request)
-    console.log('User from JWT:', user)
     
     if (!user) {
       return NextResponse.json({
@@ -27,16 +32,12 @@ export async function GET(request: NextRequest) {
       }
     })
     
-    console.log('User from DB:', dbUser)
-    
     // Check companies
     const allCompanies = await prisma.company.findMany({
       include: {
         user: true
       }
     })
-    
-    console.log('All companies:', allCompanies)
     
     return NextResponse.json({
       debug: 'success',
@@ -46,13 +47,12 @@ export async function GET(request: NextRequest) {
       userCompanies: dbUser?.companies || null
     })
 
-  } catch (error) {
-    console.error('Debug error:', error)
-    
+  } catch (error) {    
     return NextResponse.json({
       debug: 'error',
       error: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined
+      stack: process.env.NODE_ENV === 'development' ? 
+        (error instanceof Error ? error.stack : undefined) : undefined
     })
   }
 }
