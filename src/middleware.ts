@@ -95,6 +95,13 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  if (user?.verified === false) {
+    const verifyUrl = new URL("/auth/verify", request.url);
+    verifyUrl.searchParams.set("redirect", pathname);
+    console.log("🔒 Redirect to verify");
+    return NextResponse.redirect(verifyUrl);
+  }
+
   // 4. Other routes
   return NextResponse.next();
 }

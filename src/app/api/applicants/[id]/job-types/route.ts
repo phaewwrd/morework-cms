@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAuthUserAsync } from "@/lib/jwt";
 import { prisma } from "@/lib/prisma";
 import {
   handleApiError,
@@ -21,15 +20,6 @@ export async function GET(
   { params }: RouteParams
 ): Promise<NextResponse<ApiResponse>> {
   try {
-    const user = await getAuthUserAsync(request);
-    if (!user) {
-      return createErrorResponse(
-        ERROR_MESSAGES.UNAUTHORIZED,
-        401,
-        "UNAUTHORIZED"
-      );
-    }
-
     const { id } = await params;
     const applicantId = parseInt(id);
 
@@ -58,15 +48,6 @@ export async function POST(
   { params }: RouteParams
 ): Promise<NextResponse<ApiResponse>> {
   try {
-    const user = await getAuthUserAsync(request);
-    if (!user) {
-      return createErrorResponse(
-        ERROR_MESSAGES.UNAUTHORIZED,
-        401,
-        "UNAUTHORIZED"
-      );
-    }
-
     const { id } = await params;
     const applicantId = parseInt(id);
 
@@ -127,15 +108,6 @@ export async function DELETE(
   { params }: RouteParams
 ): Promise<NextResponse<ApiResponse>> {
   try {
-    const user = await getAuthUserAsync(request);
-    if (!user) {
-      return createErrorResponse(
-        ERROR_MESSAGES.UNAUTHORIZED,
-        401,
-        "UNAUTHORIZED"
-      );
-    }
-
     const { id } = await params;
     const applicantId = parseInt(id);
 

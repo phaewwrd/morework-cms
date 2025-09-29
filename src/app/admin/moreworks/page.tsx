@@ -60,8 +60,8 @@ export default function MoreWorksPage() {
   });
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [genderFilter, setGenderFilter] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
+  const [genderFilter, setGenderFilter] = useState("ALL");
+  const [statusFilter, setStatusFilter] = useState("ALL");
 
   useEffect(() => {
     fetchApplicants();
@@ -125,13 +125,9 @@ export default function MoreWorksPage() {
       applicant.lastName.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesGender =
-      genderFilter === "" ||
-      genderFilter === "ALL" ||
-      applicant.gender === genderFilter;
+      genderFilter === "ALL" || applicant.gender === genderFilter;
 
-    // Check if applicant has any positions with the selected status
     const matchesStatus =
-      statusFilter === "" ||
       statusFilter === "ALL" ||
       (applicant.positions &&
         applicant.positions.some(

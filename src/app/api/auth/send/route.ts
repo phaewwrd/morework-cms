@@ -1,18 +1,21 @@
 import { EmailTemplate } from "@/components/EmailTemplate";
-import { getAuthUser } from "@/lib/jwt";
+import { sendVerificationEmail } from "@/lib/email";
+import { getAuthUser, getAuthUserAsync } from "@/lib/jwt";
 import { prisma } from "@/lib/prisma";
 import { randomUUID } from "crypto";
 import { NextRequest } from "next/server";
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: NextRequest) {
   try {
-    const user = getAuthUser(request);
+    const user = await getAuthUserAsync(request);
+
     if (!user?.userId || !user?.email) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
+    console.log(user.userId);
 
     const verifyToken = randomUUID();
 
@@ -24,21 +27,26 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    const verifyUrl = `${process.env.DOMAIN_URL}/api/auth/verify?token=${verifyToken}`;
+    await sendVerificationEmail(user.email, verifyToken);
 
-    const { data, error } = await resend.emails.send({
-      from: "onboarding@resend.dev",
-      to: [user?.email ?? ""],
-      subject: "Verify your email",
-      react: EmailTemplate({ verifyUrl }),
+    // const { data, error } = await resend.emails.send({
+    //   from: "onboarding@resend.dev",
+    //   to: [user?.email ?? ""],
+    //   subject: "Verify your email",
+    //   react: EmailTemplate({ verifyUrl }),
+    // });
+
+    // if (error) {
+    //   console.log("route error1", error);
+    //   return Response.json({ error }, { status: 500 });
+    // }
+
+    // return Response.json(data);
+
+    return Response.json({
+      success: true,
+      message: "Verification email sent",
     });
-
-    if (error) {
-      console.log("route error1", error);
-      return Response.json({ error }, { status: 500 });
-    }
-
-    return Response.json(data);
   } catch (error) {
     console.log("route error2", error);
     return Response.json({ error }, { status: 500 });
