@@ -70,7 +70,7 @@ export default function LoginPage() {
           description: "Logged in successfully!",
         });
 
-        // Redirect based on user role
+        // // Redirect based on user role
         if (data.data.role === "company") {
           router.push("/dashboard/companies");
         } else {
