@@ -1,66 +1,77 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { useToast } from '@/hooks/use-toast'
-import Link from 'next/link'
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function RegisterPage() {
+  const router = useRouter();
   const [formData, setFormData] = useState({
-    email: '',
-    name: '',
-    password: '',
-  })
-  const [isLoading, setIsLoading] = useState(false)
-  const { toast } = useToast()
+    email: "",
+    name: "",
+    password: "",
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
+    e.preventDefault();
+    setIsLoading(true);
 
     try {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(formData),
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (data.success) {
         toast({
-          title: 'Success',
-          description: 'Account created successfully!',
-        })
+          title: "Success",
+          description: "Account created successfully!",
+        });
         // Reset form
-        setFormData({ email: '', name: '', password: '' })
+        setFormData({ email: "", name: "", password: "" });
+        if (!data.data.emailVerified) {
+          router.push("/auth/verify");
+        }
       } else {
         toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: data.message || 'Registration failed',
-        })
+          variant: "destructive",
+          title: "Error",
+          description: data.message || "Registration failed",
+        });
       }
     } catch (error) {
       toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Something went wrong. Please try again.',
-      })
+        variant: "destructive",
+        title: "Error",
+        description: "Something went wrong. Please try again.",
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
-    }))
-  }
+    }));
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-700">
@@ -88,7 +99,7 @@ export default function RegisterPage() {
                 placeholder="Enter your email"
               />
             </div>
-            
+
             <div className="space-y-2">
               <label htmlFor="name" className="text-sm font-medium">
                 Name
@@ -104,7 +115,7 @@ export default function RegisterPage() {
                 placeholder="Enter your name"
               />
             </div>
-            
+
             <div className="space-y-2">
               <label htmlFor="password" className="text-sm font-medium">
                 Password
@@ -120,15 +131,15 @@ export default function RegisterPage() {
                 placeholder="Enter your password"
               />
             </div>
-            
+
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Creating Account...' : 'Create Account'}
+              {isLoading ? "Creating Account..." : "Create Account"}
             </Button>
           </form>
-          
+
           <div className="mt-4 text-center">
             <p className="text-sm text-muted-foreground">
-              Already have an account?{' '}
+              Already have an account?{" "}
               <Link href="/auth/login" className="text-primary hover:underline">
                 Sign in
               </Link>
@@ -137,5 +148,5 @@ export default function RegisterPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

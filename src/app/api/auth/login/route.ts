@@ -69,7 +69,7 @@ export async function POST(
       user.companies.length > 0 ? user.companies[0].id : undefined;
 
     // Generate JWT token with company ID
-    const token = generateToken({
+    const token = await generateToken({
       userId: user.id.toString(), // Convert to string for JWT
       email: user.email,
       role: user.role,

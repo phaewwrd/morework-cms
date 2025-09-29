@@ -36,10 +36,10 @@ export default function VerifyEmailPage() {
           <CardTitle className="text-2xl text-center">
             Verify your email
           </CardTitle>
-          <CardDescription className="text-center">
+          {/* <CardDescription className="text-center">
             We’ve sent a verification link to your email. Please check your
             inbox to continue.
-          </CardDescription>
+          </CardDescription> */}
         </CardHeader>
         <CardContent className="space-y-4">
           <Button
@@ -48,7 +48,7 @@ export default function VerifyEmailPage() {
             onClick={handleSendEmail}
             disabled={sending}
           >
-            {sending ? "Sending..." : "Resend verification email"}
+            {sending ? "Sending..." : "Send verification email"}
           </Button>
           <p className="text-xs text-center text-gray-500">
             Didn’t receive it? Check your spam folder or request a new link.
