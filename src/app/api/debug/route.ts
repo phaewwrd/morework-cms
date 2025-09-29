@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
 
     // Check if user exists in database
     const dbUser = await prisma.user.findUnique({
-      where: { id: user.userId },
+      where: { id: (await user).userId },
       include: {
         companies: true,
       },

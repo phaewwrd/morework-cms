@@ -11,16 +11,16 @@ export async function POST(req: Request) {
 
     let applicantId: number | null = null;
     if (provider && session_id) {
-        const socialMedia = await prisma.socialMedia.findFirst({
-          where: {
-            provider: provider,
-            sessionId: session_id,
-          },
-        });
+      const socialMedia = await prisma.socialMedia.findFirst({
+        where: {
+          provider: provider,
+          sessionId: session_id,
+        },
+      });
 
-        if (socialMedia) {
-          applicantId = socialMedia.applicantId;
-        }
+      if (socialMedia) {
+        applicantId = socialMedia.applicantId;
+      }
     }
 
     await upsertApplicantData(prisma, applicantId, body);
@@ -29,7 +29,10 @@ export async function POST(req: Request) {
   } catch (error) {
     console.error(error);
     return NextResponse.json(
-      { success: false, error: error instanceof Error ? error.message : String(error) },
+      {
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+      },
       { status: 500 }
     );
   }
