@@ -50,6 +50,20 @@ interface Company {
   }>;
 }
 
+interface ExtendedPosition extends Position {
+  applicantPositions?: Array<{
+    id: number;
+    status: "PENDING" | "ACCEPTED" | "REJECTED";
+    appliedAt: string;
+    applicant: {
+      id: number;
+      firstName: string;
+      lastName: string;
+      email: string;
+    };
+  }>;
+}
+
 export default function PendingPositionsPage() {
   const { data: companiesResponse, isLoading, error } = useCompanies();
   const {
@@ -77,7 +91,7 @@ export default function PendingPositionsPage() {
   };
 
   // Get all pending positions across all companies
-  const pendingPositions = positions.flatMap((position: Position) =>
+  const pendingPositions = positions.flatMap((position: ExtendedPosition) =>
     position.status === "PENDING"
       ? [{ ...position, company: { id: position.id, title: position.title } }]
       : []
@@ -137,7 +151,7 @@ export default function PendingPositionsPage() {
           <CardContent>
             {pendingPositions.length > 0 ? (
               <div className="space-y-4">
-                {pendingPositions.map((position: Position) => (
+                {pendingPositions.map((position: ExtendedPosition) => (
                   <div
                     key={position.id}
                     className="border rounded-lg p-4 bg-yellow-50 border-yellow-200"
@@ -188,11 +202,11 @@ export default function PendingPositionsPage() {
                         </Button>
                       </div>
                     </div>
-                    {position.applicantPositions?.length > 0 && (
+                    {(position?.applicantPositions?.length || 0) > 0 && (
                       <div className="mt-3 pt-3 border-t border-yellow-200">
                         <p className="text-sm text-gray-600">
                           {position?.applicantPositions?.length} applicant
-                          {position?.applicantPositions?.length > 1
+                          {(position?.applicantPositions?.length || 0) > 1
                             ? "s"
                             : ""}{" "}
                           waiting
