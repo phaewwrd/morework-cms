@@ -30,11 +30,11 @@ import {
   Briefcase,
   Loader2,
   XCircle,
-  LogOut,
 } from "lucide-react";
-import { useCompanyApplicants } from "@/hooks/use-companies";
+import { useCompanyApplicants, useUserCompany } from "@/hooks/use-companies";
 import { usePositions } from "@/hooks/use-positions";
 import { useUpdateApplicationStatus } from "@/hooks/use-applications";
+import CompanyTopNavigation from "@/components/CompanyTopNavigation";
 
 interface Applicant {
   id: number;
@@ -59,13 +59,20 @@ export default function AllApplicantsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [jobFilter, setJobFilter] = useState("");
-
   const searchParams = useSearchParams();
   const params = useParams();
-  const router = useRouter();
   const hashedCompanyId = params.id as string;
+  const {
+    data: applicantsResponse,
+    isLoading: applicantsLoading,
+    error: applicantsError,
+    refetch: refetchApplicants,
+  } = useCompanyApplicants();
+  const { data: companyData } = useUserCompany();
+  const { data: positionsResponse, isLoading: positionsLoading } =
+    usePositions();
+  const updateApplicationMutation = useUpdateApplicationStatus();
 
-  // Set job filter from URL parameter when component mounts
   useEffect(() => {
     const positionId = searchParams.get("position");
     if (positionId) {
@@ -73,22 +80,6 @@ export default function AllApplicantsPage() {
     }
   }, [searchParams]);
 
-  // Fetch applicants using TanStack Query
-  const {
-    data: applicantsResponse,
-    isLoading: applicantsLoading,
-    error: applicantsError,
-    refetch: refetchApplicants,
-  } = useCompanyApplicants();
-
-  // Fetch positions for filter options
-  const { data: positionsResponse, isLoading: positionsLoading } =
-    usePositions();
-
-  // Update application status mutation
-  const updateApplicationMutation = useUpdateApplicationStatus();
-
-  // Filter applicants based on search and filters
   const filteredApplicants = useMemo(() => {
     if (!applicantsResponse?.data) return [];
 
@@ -132,22 +123,6 @@ export default function AllApplicantsPage() {
     );
   };
 
-  const handleSignOut = async () => {
-    try {
-      const response = await fetch("/api/auth/logout", {
-        method: "POST",
-      });
-
-      if (response.ok) {
-        router.push("/auth/login");
-      } else {
-        console.error("Failed to sign out");
-      }
-    } catch (error) {
-      console.error("Error signing out:", error);
-    }
-  };
-
   // Handle loading state
   if (applicantsLoading) {
     return (
@@ -186,28 +161,7 @@ export default function AllApplicantsPage() {
 
   return (
     <div className="container mx-auto p-6 max-w-7xl">
-      {/* Top Navigation Bar */}
-      <div className="flex items-center justify-between mb-6 p-4 border-b">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-primary/10 rounded-lg">
-              <Users className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <h2 className="font-semibold text-lg">Company Dashboard</h2>
-              <p className="text-sm text-muted-foreground">Applicants</p>
-            </div>
-          </div>
-        </div>
-        <Button
-          variant="outline"
-          onClick={handleSignOut}
-          className="flex items-center gap-2"
-        >
-          <LogOut className="h-4 w-4" />
-          Sign Out
-        </Button>
-      </div>
+      <CompanyTopNavigation company={companyData} />
 
       {/* Header */}
       <div className="mb-8">

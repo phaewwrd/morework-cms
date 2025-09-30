@@ -29,14 +29,11 @@ import {
   XCircle,
   Eye,
   Loader2,
-  LogOut,
-  Phone,
-  MapPinHouse,
 } from "lucide-react";
 import { useCompanyPositions, useUserCompany } from "@/hooks/use-companies";
 import { useUpdateApplicationStatus } from "@/hooks/use-applications";
 import { parseSecureId } from "@/lib/hash";
-import { useVerifyEmail } from "@/hooks/use-auth";
+import CompanyTopNavigation from "@/components/CompanyTopNavigation";
 
 interface Position {
   id: number;
@@ -86,16 +83,6 @@ export default function CompanyDashboardPage() {
 
   const hashedCompanyId = params.id as string;
 
-  // Parse and verify the hashed company ID
-  const companyId = useMemo(() => {
-    try {
-      return parseSecureId(hashedCompanyId);
-    } catch (error) {
-      console.error("Invalid company ID:", error);
-      return null;
-    }
-  }, [hashedCompanyId]);
-
   // Fetch user's company and verify access
   const {
     data: userCompany,
@@ -109,6 +96,16 @@ export default function CompanyDashboardPage() {
     isLoading: isLoadingPositions,
     error: positionsError,
   } = useCompanyPositions();
+
+  // Parse and verify the hashed company ID
+  const companyId = useMemo(() => {
+    try {
+      return parseSecureId(hashedCompanyId);
+    } catch (error) {
+      console.error("Invalid company ID:", error);
+      return null;
+    }
+  }, [hashedCompanyId]);
 
   // Combined loading and error states
   const isLoading = isLoadingCompany || isLoadingPositions;
@@ -201,137 +198,10 @@ export default function CompanyDashboardPage() {
     router.push(route);
   };
 
-  const handleSignOut = async () => {
-    try {
-      const response = await fetch("/api/auth/logout", {
-        method: "POST",
-      });
-
-      if (response.ok) {
-        router.push("/auth/login");
-      } else {
-        console.error("Failed to sign out");
-      }
-    } catch (error) {
-      console.error("Error signing out:", error);
-    }
-  };
-
-  // Handle invalid company ID
-  if (companyId === null) {
-    return (
-      <div className="container mx-auto p-6 max-w-7xl">
-        <div className="flex flex-col items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <XCircle className="mx-auto h-12 w-12 text-destructive mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Invalid Company ID</h3>
-            <p className="text-muted-foreground">
-              The company ID in the URL is invalid or corrupted.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Handle loading state
-  if (isLoading) {
-    return (
-      <div className="container mx-auto p-6 max-w-7xl">
-        <div className="flex flex-col items-center justify-center min-h-[400px]">
-          <Loader2 className="h-8 w-8 animate-spin mb-4" />
-          <p className="text-muted-foreground">Loading company dashboard...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Handle unauthorized access
-  if (!hasAccess) {
-    return (
-      <div className="container mx-auto p-6 max-w-7xl">
-        <div className="flex flex-col items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <XCircle className="mx-auto h-12 w-12 text-destructive mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Access Denied</h3>
-            <p className="text-muted-foreground">
-              You don't have permission to access this company dashboard.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Handle error state
-  if (error) {
-    return (
-      <div className="container mx-auto p-6 max-w-7xl">
-        <div className="flex flex-col items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <XCircle className="mx-auto h-12 w-12 text-destructive mb-4" />
-            <h3 className="text-lg font-semibold mb-2">
-              Failed to load dashboard
-            </h3>
-            <p className="text-muted-foreground mb-4">
-              {error instanceof Error
-                ? error.message
-                : "An unexpected error occurred"}
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="container mx-auto p-6 max-w-7xl">
       {/* Top Navigation Bar */}
-      <div className="flex items-center justify-between mb-6 p-4 border-b">
-        <div className="flex items-center gap-4 w-full">
-          <div className="flex items-center gap-2 w-full">
-            <div className="p-2 bg-primary/10 rounded-lg">
-              <Briefcase className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <h1 className="font-semibold text-lg">
-                {userCompany?.title || "Company"}
-              </h1>
-              <p className="text-sm text-muted-foreground">Dashboard</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 w-full">
-            <div className="p-2 bg-primary/10 rounded-lg">
-              <Phone className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <h1 className="font-semibold text-lg">เบอร์ติดต่อ</h1>
-              <p className="text-sm text-muted-foreground">
-                {userCompany?.contactName} {userCompany?.contactPhone}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 w-full">
-            <div className="p-2 bg-primary/10 rounded-lg">
-              <MapPinHouse className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <h1 className="font-semibold text-lg">ที่อยู่</h1>
-              <p className="text-sm text-muted-foreground">
-                {userCompany?.address || "-"}
-              </p>
-            </div>
-          </div>
-        </div>
-        <Button
-          variant="outline"
-          onClick={handleSignOut}
-          className="flex items-center gap-2"
-        >
-          <LogOut className="h-4 w-4" />
-          Sign Out
-        </Button>
-      </div>
+      <CompanyTopNavigation company={userCompany} />
 
       {/* Header */}
       <div className="mb-8">

@@ -25,17 +25,17 @@ model User {
 }
 
 model Company {
-  id           Int    @id @default(autoincrement())
-  title        String @db.VarChar(191)
-  address      String @db.VarChar(191)
-  city         String @db.VarChar(191)
-  country      String @db.VarChar(191)
-  email        String @unique @db.VarChar(191)
-  contactName  String @map("contact_name") @db.VarChar(191)
-  contactPhone String @map("contact_phone") @db.VarChar(191)
-  taxpayerID   String @map("taxpayer_id") @db.VarChar(191)
-  zipCode      String @map("zip_code") @db.VarChar(20)
-  userId       String @unique @map("user_id")
+  id           Int     @id @default(autoincrement())
+  title        String? @db.VarChar(191)
+  address      String? @db.VarChar(191)
+  city         String? @db.VarChar(191)
+  country      String? @db.VarChar(191)
+  email        String? @unique @db.VarChar(191)
+  contactName  String? @map("contact_name") @db.VarChar(191)
+  contactPhone String? @map("contact_phone") @db.VarChar(191)
+  taxpayerID   String? @map("taxpayer_id") @db.VarChar(191)
+  zipCode      String? @map("zip_code") @db.VarChar(20)
+  userId       String  @unique @map("user_id")
 
   // Relations
   positions Position[]

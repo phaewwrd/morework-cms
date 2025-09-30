@@ -40,6 +40,7 @@ export async function GET(
                 company: {
                   select: {
                     title: true,
+                    id: true,
                   },
                 },
               },

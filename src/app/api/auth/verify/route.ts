@@ -1,8 +1,10 @@
+// app/api/auth/verify/route.ts
 import { prisma } from "@/lib/prisma";
 import { generateToken, setAuthCookie, verifyToken } from "@/lib/jwt";
 import { NextResponse } from "next/server";
 
 export async function GET(req: Request) {
+  console.log("🔥 API ROUTE HIT - /api/auth/verify");
   const { searchParams } = new URL(req.url);
   const token = searchParams.get("token");
   if (!token) return new Response("Missing token", { status: 400 });
@@ -19,15 +21,23 @@ export async function GET(req: Request) {
     data: { emailVerified: true },
   });
 
-  // สร้าง JWT สำหรับ login session
   const sessionToken = await generateToken({
     userId: user.id.toString(),
     email: user.email,
     role: user.role,
+    emailVerified: true,
   });
 
-  const res = NextResponse.redirect("/dashboard/companies");
-  await setAuthCookie(sessionToken);
+  const redirectUrl = new URL("/auth/login", req.url);
+  const res = NextResponse.redirect(redirectUrl);
+
+  res.cookies.set("auth_token", sessionToken, {
+    httpOnly: true,
+    path: "/",
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 60 * 60 * 24,
+  });
 
   return res;
 }

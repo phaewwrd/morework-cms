@@ -12,35 +12,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
+import { useApplicants } from "@/hooks/use-applicants";
+import { Applicant } from "@/types";
 import AdminNavbar from "@/components/AdminNavbar";
-
-interface Applicant {
-  id: number;
-  firstName: string;
-  lastName: string;
-  gender: string;
-  birthDate: string;
-  email: string;
-  phone: string;
-  address: string;
-  city: string;
-  country: string;
-  zipCode: string;
-  skills: string;
-  experience: number;
-  expectedSalary: number;
-  currentlyEmployed: boolean;
-  applicationStatus: "PENDING" | "ACCEPTED" | "REJECTED";
-  positions?: Array<{
-    id: number;
-    title: string;
-    status: "ACTIVE" | "PENDING" | "CLOSED";
-    applicationStatus: "PENDING" | "ACCEPTED" | "REJECTED";
-    company: {
-      title: string;
-    };
-  }>;
-}
 
 interface ApplicantStats {
   total: number;
@@ -49,58 +23,51 @@ interface ApplicantStats {
   rejected: number;
 }
 
+// Interface for the transformed position data from API
+interface TransformedApplicantPosition {
+  id: number;
+  title: string;
+  status: string; // Position status (ACTIVE, CLOSED, PENDING)
+  applicationStatus: "PENDING" | "ACCEPTED" | "REJECTED"; // Application status
+  company: {
+    title: string;
+  };
+}
+
+// Extended Applicant interface with transformed positions
+interface ExtendedApplicant extends Omit<Applicant, "positions"> {
+  positions?: TransformedApplicantPosition[];
+}
+
 export default function MoreWorksPage() {
   const router = useRouter();
-  const [applicants, setApplicants] = useState<Applicant[]>([]);
+  const { data: applicantsResponse, isLoading, error } = useApplicants();
+  const applicants = (applicantsResponse?.data || []) as ExtendedApplicant[];
   const [stats, setStats] = useState<ApplicantStats>({
     total: 0,
     accepted: 0,
     pending: 0,
     rejected: 0,
   });
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [genderFilter, setGenderFilter] = useState("ALL");
   const [statusFilter, setStatusFilter] = useState("ALL");
 
   useEffect(() => {
-    fetchApplicants();
-  }, []);
-
-  const fetchApplicants = async () => {
-    try {
-      const response = await fetch("/api/applicants");
-      const data = await response.json();
-
-      if (data.success) {
-        setApplicants(data.data);
-        calculateStats(data.data);
-        console.log("data", data.data);
-      } else {
-        toast({
-          title: "Error",
-          description: data.message || "Failed to fetch applicants",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to fetch applicants",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
+    if (applicants.length > 0) {
+      console.log("Applicants data:", applicants[0]?.positions?.[0]); // Debug log
+      calculateStats(applicants);
     }
-  };
+  }, [applicants]);
 
-  const calculateStats = (applicantData: Applicant[]) => {
+  const calculateStats = (applicantData: ExtendedApplicant[]) => {
     const stats = { total: 0, accepted: 0, pending: 0, rejected: 0 };
 
     applicantData.forEach((applicant) => {
       if (applicant.positions && applicant.positions.length > 0) {
         applicant.positions.forEach((position) => {
           stats.total += 1;
+          // Use applicationStatus instead of status (position status)
           switch (position.applicationStatus) {
             case "ACCEPTED":
               stats.accepted += 1;
@@ -119,29 +86,32 @@ export default function MoreWorksPage() {
     setStats(stats);
   };
 
-  const filteredApplicants = applicants.filter((applicant) => {
-    const matchesSearch =
-      applicant.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      applicant.lastName.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredApplicants = applicants.filter(
+    (applicant: ExtendedApplicant) => {
+      const matchesSearch =
+        applicant.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        applicant.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        applicant.email.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesGender =
-      genderFilter === "ALL" || applicant.gender === genderFilter;
+      const matchesGender =
+        genderFilter === "ALL" || applicant.gender === genderFilter;
 
-    const matchesStatus =
-      statusFilter === "ALL" ||
-      (applicant.positions &&
-        applicant.positions.some(
-          (position) => position.applicationStatus === statusFilter
-        ));
+      const matchesStatus =
+        statusFilter === "ALL" ||
+        (applicant.positions &&
+          applicant.positions.some(
+            (position) => position.applicationStatus === statusFilter
+          ));
 
-    return matchesSearch && matchesGender && matchesStatus;
-  });
+      return matchesSearch && matchesGender && matchesStatus;
+    }
+  );
 
   const handleViewApplicant = (applicantId: number) => {
     router.push(`/admin/moreworks/applicant/${applicantId}` as any);
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="container mx-auto p-6">
         <div className="flex items-center justify-center min-h-[400px]">
@@ -151,6 +121,7 @@ export default function MoreWorksPage() {
     );
   }
 
+  console.log(applicants, "applicants data");
   return (
     <>
       <AdminNavbar />
@@ -277,7 +248,7 @@ export default function MoreWorksPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                {filteredApplicants.map((applicant) => (
+                {filteredApplicants.map((applicant: ExtendedApplicant) => (
                   <div
                     key={applicant.id}
                     className="flex items-center justify-between p-4 border rounded-lg"
@@ -297,41 +268,45 @@ export default function MoreWorksPage() {
                                 Applied Positions:
                               </p>
                               <div className="space-y-1">
-                                {applicant.positions.map((position) => (
-                                  <div
-                                    key={position.id}
-                                    className="flex items-center gap-2 flex-wrap"
-                                  >
-                                    <span className="text-xs">
-                                      {position.title}
-                                    </span>
-                                    <span className="text-xs text-muted-foreground">
-                                      at {position.company.title}
-                                    </span>
-                                    <Badge
-                                      variant={
-                                        position.applicationStatus ===
-                                        "ACCEPTED"
-                                          ? "default"
-                                          : position.applicationStatus ===
-                                            "PENDING"
-                                          ? "secondary"
-                                          : "destructive"
-                                      }
-                                      className={
-                                        position.applicationStatus ===
-                                        "ACCEPTED"
-                                          ? "bg-green-100 text-green-800 hover:bg-green-100"
-                                          : position.applicationStatus ===
-                                            "PENDING"
-                                          ? "bg-yellow-100 text-yellow-800 hover:bg-yellow-100"
-                                          : "bg-red-100 text-red-800 hover:bg-red-100"
-                                      }
+                                {applicant.positions?.map(
+                                  (
+                                    applicantPosition: TransformedApplicantPosition
+                                  ) => (
+                                    <div
+                                      key={applicantPosition.id}
+                                      className="flex items-center gap-2 flex-wrap"
                                     >
-                                      {position.applicationStatus}
-                                    </Badge>
-                                  </div>
-                                ))}
+                                      <span className="text-xs">
+                                        {applicantPosition.title}
+                                      </span>
+                                      <span className="text-xs text-muted-foreground">
+                                        at {applicantPosition.company?.title}
+                                      </span>
+                                      <Badge
+                                        variant={
+                                          applicantPosition.applicationStatus ===
+                                          "ACCEPTED"
+                                            ? "default"
+                                            : applicantPosition.applicationStatus ===
+                                              "PENDING"
+                                            ? "secondary"
+                                            : "destructive"
+                                        }
+                                        className={
+                                          applicantPosition.applicationStatus ===
+                                          "ACCEPTED"
+                                            ? "bg-green-100 text-green-800 hover:bg-green-100"
+                                            : applicantPosition.applicationStatus ===
+                                              "PENDING"
+                                            ? "bg-yellow-100 text-yellow-800 hover:bg-yellow-100"
+                                            : "bg-red-100 text-red-800 hover:bg-red-100"
+                                        }
+                                      >
+                                        {applicantPosition.applicationStatus}
+                                      </Badge>
+                                    </div>
+                                  )
+                                )}
                               </div>
                             </div>
                           )}

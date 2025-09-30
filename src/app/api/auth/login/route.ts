@@ -76,8 +76,10 @@ export async function POST(
       emailVerified: user.emailVerified,
     });
 
+    const res = NextResponse.json({ success: true });
+
     // Set HttpOnly cookie
-    await setAuthCookie(token);
+    await setAuthCookie(res, token);
 
     // Return user data (excluding sensitive info)
     const userData = {
