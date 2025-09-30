@@ -20,25 +20,15 @@ const protectedApiRoutes = [
   "/api/users",
 ];
 
-// ⭐ เปลี่ยนเป็น async function
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  console.log("🚀 Middleware running:", pathname);
-
   const user = await getAuthUser(request);
-  console.log("userrrrr", user);
 
   // 1. Check public routes
   const isPublicRoute = publicRoutes.some(
     (route) => pathname === route || pathname.startsWith(route)
   );
-
-  if (user && user.emailVerified === false && pathname !== "/auth/verify") {
-    const verifyUrl = new URL("/auth/verify", request.url);
-    verifyUrl.searchParams.set("redirect", pathname);
-    return NextResponse.redirect(verifyUrl);
-  }
 
   if (isPublicRoute) {
     const isAuthRoute = authRoutes.some((route) => pathname === route);
@@ -59,7 +49,6 @@ export async function middleware(request: NextRequest) {
 
   if (isProtectedApiRoute) {
     if (!user) {
-      console.log("🚫 API 401: No auth");
       return NextResponse.json(
         {
           success: false,
@@ -81,20 +70,17 @@ export async function middleware(request: NextRequest) {
     if (!user) {
       const loginUrl = new URL("/auth/login", request.url);
       loginUrl.searchParams.set("redirect", pathname);
-      console.log("🔒 Redirect to login");
       return NextResponse.redirect(loginUrl);
     }
 
     // Role-based access control
     if (pathname.startsWith("/admin") && user.role !== "admin") {
-      console.log("🚫 Non-admin accessing /admin");
       const redirectUrl =
         user.role === "company" ? "/dashboard/companies" : "/auth/login";
       return NextResponse.redirect(new URL(redirectUrl, request.url));
     }
 
     if (pathname.startsWith("/dashboard") && user.role !== "company") {
-      console.log("🚫 Non-company accessing /dashboard");
       return NextResponse.redirect(new URL("/auth/login", request.url));
     }
 

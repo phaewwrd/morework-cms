@@ -13,7 +13,7 @@ const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ||
   (typeof window !== "undefined"
     ? window.location.origin
-    : "http://localhost:3002");
+    : "http://localhost:3000");
 
 // Generic API client with authentication
 class ApiClient {
@@ -146,7 +146,10 @@ export const authApi = {
 
   getMe: () => apiClient.get("/auth/me"),
 
-  send: () => apiClient.post("/auth/send"),
+  send: () => {
+    console.log("🔥 CALLING authApi.send (POST)");
+    return apiClient.post("/auth/send");
+  },
 
   verify: () => apiClient.get("/auth/verify"),
 };

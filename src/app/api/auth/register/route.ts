@@ -48,6 +48,23 @@ export async function POST(
       } as any, // Type assertion to work around Prisma type issues
     });
 
+    const companyData = await prisma.company.create({
+      data: {
+        title: "",
+        address: "",
+        city: "",
+        country: "",
+        email: validatedData.email,
+        contactName: "",
+        contactPhone: "",
+        taxpayerID: "",
+        zipCode: "",
+        user: {
+          connect: { id: user.id },
+        },
+      },
+    });
+
     // Generate JWT token
     const verifyToken = await generateToken({
       userId: user.id.toString(), // Convert to string for JWT
@@ -56,8 +73,10 @@ export async function POST(
       emailVerified: user.emailVerified,
     });
 
+    const res = NextResponse.json({ success: true });
+
     // Set HttpOnly cookie
-    await setAuthCookie(verifyToken);
+    await setAuthCookie(res, verifyToken);
 
     return createSuccessResponse(verifyToken, "Register successful");
   } catch (error) {

@@ -9,11 +9,20 @@ import { Resend } from "resend";
 // const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: NextRequest) {
+  console.log("🔥 API ROUTE HIT - /api/auth/send");
+
   try {
     const user = await getAuthUserAsync(request);
+    console.log("🔥 Auth user:", user);
 
     if (!user?.userId || !user?.email) {
-      return Response.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Unauthorized",
+        },
+        { status: 401 }
+      );
     }
 
     const verifyToken = await generateToken({
@@ -23,36 +32,59 @@ export async function POST(request: NextRequest) {
       emailVerified: user.emailVerified,
     });
 
-    await prisma.verificationToken.create({
+    const insertedToken = await prisma.verificationToken.create({
       data: {
-        userId: user.userId, // ใช้ userId ตรง ๆ
         token: verifyToken,
-        expires: new Date(Date.now() + 1000 * 60 * 30), // 30 นาที
+        user: {
+          connect: { id: user.userId },
+        },
+        expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 ชั่วโมง
       },
     });
 
-    await sendVerificationEmail(user.email, verifyToken);
+    if (!insertedToken) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Failed to create verification token",
+        },
+        { status: 500 }
+      );
+    }
 
-    // const { data, error } = await resend.emails.send({
-    //   from: "onboarding@resend.dev",
-    //   to: [user?.email ?? ""],
-    //   subject: "Verify your email",
-    //   react: EmailTemplate({ verifyUrl }),
-    // });
+    console.log("🔥 Verification token created:", insertedToken);
 
-    // if (error) {
-    //   console.log("route error1", error);
-    //   return Response.json({ error }, { status: 500 });
-    // }
-
-    // return Response.json(data);
+    try {
+      await sendVerificationEmail(user.email, verifyToken);
+    } catch (emailError) {
+      console.error("Email sending failed:", emailError);
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "Failed to send verification email. Please check email configuration.",
+          details:
+            emailError instanceof Error
+              ? emailError.message
+              : "Unknown email error",
+        },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({
       success: true,
       message: "Email sent successfully",
     });
   } catch (error) {
-    console.log("route error2", error);
-    return Response.json({ error }, { status: 500 });
+    console.error("Route error:", error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Internal server error",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 }
+    );
   }
 }

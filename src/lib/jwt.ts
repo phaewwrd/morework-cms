@@ -1,6 +1,6 @@
 import { jwtVerify, SignJWT, type JWTPayload as JoseJWTPayload } from "jose";
 import { cookies } from "next/headers";
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 const COOKIE_NAME = "auth-token";
 
@@ -79,7 +79,7 @@ export async function verifyToken(token: string): Promise<CustomJWTPayload> {
 /**
  * Set HttpOnly cookie with JWT token
  */
-export async function setAuthCookie(token: string) {
+export async function setAuthCookie(res: NextResponse, token: string) {
   const cookieStore = await cookies();
   cookieStore.set(COOKIE_NAME, token, {
     httpOnly: true,

@@ -33,7 +33,6 @@ import {
 import { useCompanyPositions, useUserCompany } from "@/hooks/use-companies";
 import { useUpdateApplicationStatus } from "@/hooks/use-applications";
 import { parseSecureId } from "@/lib/hash";
-import { useVerifyEmail } from "@/hooks/use-auth";
 import CompanyTopNavigation from "@/components/CompanyTopNavigation";
 
 interface Position {
