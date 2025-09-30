@@ -199,6 +199,7 @@ export async function getAuthUserAsync(
           email: !!decoded.email,
           role: !!decoded.role,
           emailVerified: !!decoded.emailVerified,
+          companyId: !!decoded.companyId,
         });
       }
       return null;

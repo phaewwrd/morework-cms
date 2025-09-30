@@ -687,7 +687,7 @@ export default function ApplicantDetailPage() {
                   </div>
                 ) : (
                   <>
-                    {applicant.addresses.length > 0 ? (
+                    {applicant?.addresses?.length > 0 ? (
                       <div className="space-y-3">
                         {applicant.addresses.map((address) => (
                           <div
@@ -846,7 +846,7 @@ export default function ApplicantDetailPage() {
                         </div>
                       </div>
                     ))}
-                    {educations.length === 0 && (
+                    {educations?.length === 0 && (
                       <p className="text-gray-500">
                         No education records. Click "Add Education" to add one.
                       </p>
@@ -854,7 +854,7 @@ export default function ApplicantDetailPage() {
                   </div>
                 ) : (
                   <>
-                    {applicant.educations.length > 0 ? (
+                    {applicant?.educations?.length > 0 ? (
                       <div className="space-y-3">
                         {applicant.educations.map((education) => (
                           <div
@@ -1042,7 +1042,7 @@ export default function ApplicantDetailPage() {
                         </div>
                       </div>
                     ))}
-                    {workExperiences.length === 0 && (
+                    {workExperiences?.length === 0 && (
                       <p className="text-gray-500">
                         No work experience. Click "Add Experience" to add one.
                       </p>
@@ -1050,9 +1050,9 @@ export default function ApplicantDetailPage() {
                   </div>
                 ) : (
                   <>
-                    {applicant.workExperiences.length > 0 ? (
+                    {applicant.workExperiences?.length > 0 ? (
                       <div className="space-y-3">
-                        {applicant.workExperiences.map((experience) => (
+                        {applicant.workExperiences?.map((experience) => (
                           <div
                             key={experience.id}
                             className="p-3 border rounded-lg"
@@ -1184,7 +1184,7 @@ export default function ApplicantDetailPage() {
                         </div>
                       </div>
                     ))}
-                    {trainings.length === 0 && (
+                    {trainings?.length === 0 && (
                       <p className="text-gray-500">
                         No training records. Click "Add Training" to add one.
                       </p>
@@ -1192,9 +1192,9 @@ export default function ApplicantDetailPage() {
                   </div>
                 ) : (
                   <>
-                    {applicant.trainings.length > 0 ? (
+                    {applicant.trainings?.length > 0 ? (
                       <div className="space-y-3">
-                        {applicant.trainings.map((training) => (
+                        {applicant.trainings?.map((training) => (
                           <div
                             key={training.id}
                             className="p-3 border rounded-lg"
@@ -1226,9 +1226,9 @@ export default function ApplicantDetailPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {applicant.documents.length > 0 ? (
+                {applicant?.documents?.length > 0 ? (
                   <div className="space-y-3">
-                    {applicant.documents.map((document) => (
+                    {applicant?.documents?.map((document) => (
                       <div key={document.id} className="p-3 border rounded-lg">
                         <div className="flex items-center justify-between">
                           <p className="font-medium">{document.description}</p>
@@ -1307,7 +1307,7 @@ export default function ApplicantDetailPage() {
                         </div>
                         <p className="text-xs text-gray-500">
                           Selected: {selectedJobTypes.length} job type
-                          {selectedJobTypes.length !== 1 ? "s" : ""}
+                          {selectedJobTypes?.length !== 1 ? "s" : ""}
                         </p>
                       </div>
                     )}
@@ -1347,9 +1347,9 @@ export default function ApplicantDetailPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {applicant.positions.length > 0 ? (
+                {applicant?.positions?.length > 0 ? (
                   <div className="space-y-4">
-                    {applicant.positions.map((application) => (
+                    {applicant?.positions?.map((application) => (
                       <div
                         key={application.id}
                         className="p-4 border rounded-lg"
@@ -1399,9 +1399,9 @@ export default function ApplicantDetailPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {applicant.socialMedia.length > 0 ? (
+                {applicant?.socialMedia?.length > 0 ? (
                   <div className="space-y-3">
-                    {applicant.socialMedia.map((social) => (
+                    {applicant?.socialMedia?.map((social) => (
                       <div key={social.id} className="p-3 border rounded-lg">
                         <p className="font-medium">{social.provider}</p>
                         <p className="text-sm text-gray-600">
