@@ -20,6 +20,7 @@ import { toast } from "@/hooks/use-toast";
 import AdminNavbar from "@/components/AdminNavbar";
 import { CircleChevronDown } from "lucide-react";
 import { Position } from "@/types";
+import Link from "next/link";
 
 interface Company {
   id: number;
@@ -237,16 +238,6 @@ export default function AdminCompaniesPage() {
     }
   };
 
-  // Get all pending positions across all companies
-  const pendingPositions = companies.flatMap((company) =>
-    company.positions
-      .filter((pos) => pos.status === "PENDING")
-      .map((pos) => ({
-        ...pos,
-        company: { id: company.id, title: company.title },
-      }))
-  );
-
   if (loading) {
     return (
       <div className="container mx-auto p-6">
@@ -266,12 +257,23 @@ export default function AdminCompaniesPage() {
       <AdminNavbar />
       <div className="container mx-auto p-6">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold tracking-tight">
-            Admin Dashboard - Companies
-          </h1>
-          <p className="text-muted-foreground">
-            Manage all companies, positions and applicants
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">
+                Admin Dashboard - Companies
+              </h1>
+              <p className="text-muted-foreground">
+                Manage all companies, positions and applicants
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Link href="/admin/positions/pending">
+                <Button className="bg-yellow-600 hover:bg-yellow-700 text-white">
+                  Pending Positions ({stats.pendingPositions})
+                </Button>
+              </Link>
+            </div>
+          </div>
         </div>
 
         {/* Statistics Cards */}
@@ -395,106 +397,6 @@ export default function AdminCompaniesPage() {
                 </Select>
               </div>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Pending Positions Section */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              Pending Positions
-              <div className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-sm font-medium">
-                {pendingPositions.length}
-              </div>
-            </CardTitle>
-            <CardDescription>
-              Positions awaiting approval - click Approve to activate or Deny to
-              close
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {pendingPositions.length > 0 ? (
-              <div className="space-y-4">
-                {pendingPositions.map((position) => (
-                  <div
-                    key={position.id}
-                    className="border rounded-lg p-4 bg-yellow-50 border-yellow-200"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-lg">
-                          {position.title}
-                        </h4>
-                        <p className="text-sm text-muted-foreground mb-2">
-                          {position.company.title}
-                        </p>
-                        <div className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs font-medium inline-block">
-                          PENDING APPROVAL
-                        </div>
-                      </div>
-                      <div className="flex gap-2 ml-4">
-                        <Button
-                          size="sm"
-                          className="bg-green-600 hover:bg-green-700 text-white"
-                          onClick={() =>
-                            updatePositionStatus(position.id, "ACTIVE")
-                          }
-                          disabled={updatingPosition === position.id}
-                        >
-                          {updatingPosition === position.id
-                            ? "..."
-                            : "✓ Approve"}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() =>
-                            updatePositionStatus(position.id, "CLOSED")
-                          }
-                          disabled={updatingPosition === position.id}
-                        >
-                          {updatingPosition === position.id ? "..." : "✗ Deny"}
-                        </Button>
-                      </div>
-                    </div>
-                    {position.applicantPositions.length > 0 && (
-                      <div className="mt-3 pt-3 border-t border-yellow-200">
-                        <p className="text-sm text-gray-600">
-                          {position.applicantPositions.length} applicant
-                          {position.applicantPositions.length > 1
-                            ? "s"
-                            : ""}{" "}
-                          waiting
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {/* Skeleton loader for empty state */}
-                <div className="border rounded-lg p-4 bg-gray-50 border-gray-200">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="h-6 bg-gray-200 rounded w-3/4 mb-2 animate-pulse"></div>
-                      <div className="h-4 bg-gray-200 rounded w-1/2 mb-2 animate-pulse"></div>
-                      <div className="h-6 bg-gray-200 rounded w-32 animate-pulse"></div>
-                    </div>
-                    <div className="flex gap-2 ml-4">
-                      <div className="h-8 bg-gray-200 rounded w-20 animate-pulse"></div>
-                      <div className="h-8 bg-gray-200 rounded w-16 animate-pulse"></div>
-                    </div>
-                  </div>
-                </div>
-                <div className="text-center py-4 text-muted-foreground">
-                  <p className="text-sm">No pending positions at the moment</p>
-                  <p className="text-xs mt-1">
-                    New positions will appear here when they need approval
-                  </p>
-                </div>
-              </div>
-            )}
           </CardContent>
         </Card>
 
