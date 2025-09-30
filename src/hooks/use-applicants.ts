@@ -173,7 +173,7 @@ export const upsertApplicantData = async (
   if (preffered_location) {
     applicantData.prefferedLocation = preffered_location;
   } else if (preferred_workplace) {
-    applicantData.prefferredLocation = preferred_workplace;
+    applicantData.prefferedLocation = preferred_workplace;
   }
   console.log(applicantData.startWorkingDate, "applicantData.startWorkingDate");
   console.log(
@@ -381,7 +381,9 @@ export const upsertApplicantData = async (
     // Creations
     if (addressesToCreate.length > 0) {
       operations.push(
-        ...addressesToCreate.map((addr) =>
+        ...addressesToCreate
+        .filter((addr) => addr.district_id)
+        .map((addr) =>
           prisma.applicantAddress.create({
             data: {
               applicantId: applicant.id,
