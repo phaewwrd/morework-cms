@@ -188,7 +188,7 @@ export default function PendingPositionsPage() {
                         </Button>
                       </div>
                     </div>
-                    {position?.applicantPositions?.length > 0 && (
+                    {position.applicantPositions?.length > 0 && (
                       <div className="mt-3 pt-3 border-t border-yellow-200">
                         <p className="text-sm text-gray-600">
                           {position?.applicantPositions?.length} applicant

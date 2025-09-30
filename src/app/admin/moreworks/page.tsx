@@ -23,10 +23,26 @@ interface ApplicantStats {
   rejected: number;
 }
 
+// Interface for the transformed position data from API
+interface TransformedApplicantPosition {
+  id: number;
+  title: string;
+  status: string; // Position status (ACTIVE, CLOSED, PENDING)
+  applicationStatus: "PENDING" | "ACCEPTED" | "REJECTED"; // Application status
+  company: {
+    title: string;
+  };
+}
+
+// Extended Applicant interface with transformed positions
+interface ExtendedApplicant extends Omit<Applicant, "positions"> {
+  positions?: TransformedApplicantPosition[];
+}
+
 export default function MoreWorksPage() {
   const router = useRouter();
   const { data: applicantsResponse, isLoading, error } = useApplicants();
-  const applicants = applicantsResponse?.data || [];
+  const applicants = (applicantsResponse?.data || []) as ExtendedApplicant[];
   const [stats, setStats] = useState<ApplicantStats>({
     total: 0,
     accepted: 0,
@@ -39,11 +55,12 @@ export default function MoreWorksPage() {
 
   useEffect(() => {
     if (applicants.length > 0) {
+      console.log("Applicants data:", applicants[0]?.positions?.[0]); // Debug log
       calculateStats(applicants);
     }
   }, [applicants]);
 
-  const calculateStats = (applicantData: Applicant[]) => {
+  const calculateStats = (applicantData: ExtendedApplicant[]) => {
     const stats = { total: 0, accepted: 0, pending: 0, rejected: 0 };
 
     applicantData.forEach((applicant) => {
@@ -51,7 +68,7 @@ export default function MoreWorksPage() {
         applicant.positions.forEach((position) => {
           stats.total += 1;
           // Use applicationStatus instead of status (position status)
-          switch ((position as any).applicationStatus) {
+          switch (position.applicationStatus) {
             case "ACCEPTED":
               stats.accepted += 1;
               break;
@@ -69,24 +86,26 @@ export default function MoreWorksPage() {
     setStats(stats);
   };
 
-  const filteredApplicants = applicants.filter((applicant: Applicant) => {
-    const matchesSearch =
-      applicant.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      applicant.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      applicant.email.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredApplicants = applicants.filter(
+    (applicant: ExtendedApplicant) => {
+      const matchesSearch =
+        applicant.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        applicant.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        applicant.email.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesGender =
-      genderFilter === "ALL" || applicant.gender === genderFilter;
+      const matchesGender =
+        genderFilter === "ALL" || applicant.gender === genderFilter;
 
-    const matchesStatus =
-      statusFilter === "ALL" ||
-      (applicant.positions &&
-        applicant.positions.some(
-          (position) => (position as any).applicationStatus === statusFilter
-        ));
+      const matchesStatus =
+        statusFilter === "ALL" ||
+        (applicant.positions &&
+          applicant.positions.some(
+            (position) => position.applicationStatus === statusFilter
+          ));
 
-    return matchesSearch && matchesGender && matchesStatus;
-  });
+      return matchesSearch && matchesGender && matchesStatus;
+    }
+  );
 
   const handleViewApplicant = (applicantId: number) => {
     router.push(`/admin/moreworks/applicant/${applicantId}` as any);
@@ -102,6 +121,7 @@ export default function MoreWorksPage() {
     );
   }
 
+  console.log(applicants, "applicants data");
   return (
     <>
       <AdminNavbar />
@@ -228,7 +248,7 @@ export default function MoreWorksPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                {filteredApplicants.map((applicant: Applicant) => (
+                {filteredApplicants.map((applicant: ExtendedApplicant) => (
                   <div
                     key={applicant.id}
                     className="flex items-center justify-between p-4 border rounded-lg"
@@ -249,45 +269,40 @@ export default function MoreWorksPage() {
                               </p>
                               <div className="space-y-1">
                                 {applicant.positions?.map(
-                                  (applicantPosition) => (
+                                  (
+                                    applicantPosition: TransformedApplicantPosition
+                                  ) => (
                                     <div
                                       key={applicantPosition.id}
                                       className="flex items-center gap-2 flex-wrap"
                                     >
                                       <span className="text-xs">
-                                        {applicantPosition.position?.title}
+                                        {applicantPosition.title}
                                       </span>
                                       <span className="text-xs text-muted-foreground">
-                                        at{" "}
-                                        {
-                                          applicantPosition.position?.company
-                                            ?.title
-                                        }
+                                        at {applicantPosition.company?.title}
                                       </span>
                                       <Badge
                                         variant={
-                                          (applicantPosition as any)
-                                            .applicationStatus === "ACCEPTED"
+                                          applicantPosition.applicationStatus ===
+                                          "ACCEPTED"
                                             ? "default"
-                                            : (applicantPosition as any)
-                                                .applicationStatus === "PENDING"
+                                            : applicantPosition.applicationStatus ===
+                                              "PENDING"
                                             ? "secondary"
                                             : "destructive"
                                         }
                                         className={
-                                          (applicantPosition as any)
-                                            .applicationStatus === "ACCEPTED"
+                                          applicantPosition.applicationStatus ===
+                                          "ACCEPTED"
                                             ? "bg-green-100 text-green-800 hover:bg-green-100"
-                                            : (applicantPosition as any)
-                                                .applicationStatus === "PENDING"
+                                            : applicantPosition.applicationStatus ===
+                                              "PENDING"
                                             ? "bg-yellow-100 text-yellow-800 hover:bg-yellow-100"
                                             : "bg-red-100 text-red-800 hover:bg-red-100"
                                         }
                                       >
-                                        {
-                                          (applicantPosition as any)
-                                            .applicationStatus
-                                        }
+                                        {applicantPosition.applicationStatus}
                                       </Badge>
                                     </div>
                                   )
