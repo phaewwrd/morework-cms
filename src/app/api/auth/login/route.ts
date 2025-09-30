@@ -73,7 +73,7 @@ export async function POST(
       userId: user.id.toString(), // Convert to string for JWT
       email: user.email,
       role: user.role,
-      companyId: companyId,
+      emailVerified: user.emailVerified,
     });
 
     // Set HttpOnly cookie
@@ -86,7 +86,6 @@ export async function POST(
       role: user.role,
       emailVerified: user.emailVerified,
       createdAt: user.createdAt,
-      companyId: companyId,
     };
 
     return createSuccessResponse(userData, "Login successful");

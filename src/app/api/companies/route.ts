@@ -1,26 +1,32 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
-import { getAuthUserAsync } from '@/lib/jwt'
-import { 
-  handleApiError, 
-  createErrorResponse, 
-  createSuccessResponse, 
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { getAuthUserAsync } from "@/lib/jwt";
+import {
+  handleApiError,
+  createErrorResponse,
+  createSuccessResponse,
   ERROR_MESSAGES,
-  type ApiResponse 
-} from '@/lib/api-errors'
+  type ApiResponse,
+} from "@/lib/api-errors";
 
-export async function GET(request: NextRequest): Promise<NextResponse<ApiResponse>> {
+export async function GET(
+  request: NextRequest
+): Promise<NextResponse<ApiResponse>> {
   try {
     // Get the authenticated user
-    const user = await getAuthUserAsync(request)
+    const user = await getAuthUserAsync(request);
 
     if (!user) {
-      return createErrorResponse(ERROR_MESSAGES.UNAUTHORIZED, 401, 'UNAUTHORIZED')
+      return createErrorResponse(
+        ERROR_MESSAGES.UNAUTHORIZED,
+        401,
+        "UNAUTHORIZED"
+      );
     }
 
     // Check if user is an admin
-    if (user.role !== 'admin') {
-      return createErrorResponse(ERROR_MESSAGES.FORBIDDEN, 403, 'FORBIDDEN')
+    if (user.role !== "admin") {
+      return createErrorResponse(ERROR_MESSAGES.FORBIDDEN, 403, "FORBIDDEN");
     }
 
     // Get all companies with their positions and applications
@@ -39,8 +45,8 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
           select: {
             id: true,
             email: true,
-            createdAt: true
-          }
+            createdAt: true,
+          },
         },
         positions: {
           select: {
@@ -57,22 +63,21 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
                     id: true,
                     firstName: true,
                     lastName: true,
-                    email: true
-                  }
-                }
-              }
-            }
-          }
-        }
+                    email: true,
+                  },
+                },
+              },
+            },
+          },
+        },
       },
       orderBy: {
-        id: 'desc'
-      }
-    })
+        id: "desc",
+      },
+    });
 
-    return createSuccessResponse(companies)
-
+    return createSuccessResponse(companies);
   } catch (error) {
-    return handleApiError(error, 'Companies GET')
+    return handleApiError(error, "Companies GET");
   }
 }

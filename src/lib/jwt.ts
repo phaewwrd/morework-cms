@@ -9,7 +9,7 @@ export interface CustomJWTPayload extends JoseJWTPayload {
   userId: string;
   email: string;
   role: string;
-  companyId?: number;
+  emailVerified?: boolean;
 }
 
 export class AuthError extends Error {
@@ -142,6 +142,7 @@ export async function getAuthUser(
           userId: !!decoded.userId,
           email: !!decoded.email,
           role: !!decoded.role,
+          emailVerified: !!decoded.emailVerified,
         });
       }
       return null;
@@ -197,6 +198,8 @@ export async function getAuthUserAsync(
           userId: !!decoded.userId,
           email: !!decoded.email,
           role: !!decoded.role,
+          emailVerified: !!decoded.emailVerified,
+          companyId: !!decoded.companyId,
         });
       }
       return null;

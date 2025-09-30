@@ -71,6 +71,7 @@ interface CompanyStats {
   totalJobs: number;
   activeJobs: number;
   pendingJobs: number;
+  closedJobs: number;
   totalApplications: number;
   pendingApplications: number;
   acceptedApplications: number;
@@ -129,6 +130,7 @@ export default function CompanyDashboardPage() {
         totalJobs: 0,
         activeJobs: 0,
         pendingJobs: 0,
+        closedJobs: 0,
         totalApplications: 0,
         pendingApplications: 0,
         acceptedApplications: 0,
@@ -143,6 +145,8 @@ export default function CompanyDashboardPage() {
           acc.activeJobs += 1;
         } else if (position.status === "PENDING") {
           acc.pendingJobs += 1;
+        } else if (position.status === "CLOSED") {
+          acc.closedJobs += 1;
         }
 
         position.applicantPositions?.forEach((application) => {
@@ -162,6 +166,7 @@ export default function CompanyDashboardPage() {
         totalJobs: 0,
         activeJobs: 0,
         pendingJobs: 0,
+        closedJobs: 0,
         totalApplications: 0,
         pendingApplications: 0,
         acceptedApplications: 0,
@@ -353,7 +358,7 @@ export default function CompanyDashboardPage() {
       {/* Statistics Cards */}
       <div className="grid grid-col-1 gap-3">
         <h1>POSITIONS</h1>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-3 mb-8">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Jobs</CardTitle>
@@ -372,10 +377,13 @@ export default function CompanyDashboardPage() {
               <CheckCircle className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.activeJobs}</div>
+              <div className="text-2xl font-bold text-green-600">
+                {stats.activeJobs}
+              </div>
               <p className="text-xs text-muted-foreground">Currently hiring</p>
             </CardContent>
           </Card>
+
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
@@ -384,8 +392,23 @@ export default function CompanyDashboardPage() {
               <Clock className="h-4 w-4 text-yellow-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.pendingJobs}</div>
+              <div className="text-2xl font-bold text-yellow-600">
+                {stats.pendingJobs}
+              </div>
               <p className="text-xs text-muted-foreground">Pending positions</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Closed Jobs</CardTitle>
+              <Clock className="h-4 w-4 text-red-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-red-600">
+                {stats.closedJobs || 0}
+              </div>
+              <p className="text-xs text-muted-foreground">Closed positions</p>
             </CardContent>
           </Card>
         </div>
@@ -408,23 +431,11 @@ export default function CompanyDashboardPage() {
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pending</CardTitle>
-              <Clock className="h-4 w-4 text-yellow-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {stats.pendingApplications}
-              </div>
-              <p className="text-xs text-muted-foreground">Awaiting review</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Accepted</CardTitle>
               <CheckCircle className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
+              <div className="text-2xl font-bold text-green-600">
                 {stats.acceptedApplications}
               </div>
               <p className="text-xs text-muted-foreground">Hired candidates</p>
@@ -432,11 +443,24 @@ export default function CompanyDashboardPage() {
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Pending</CardTitle>
+              <Clock className="h-4 w-4 text-yellow-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-yellow-600">
+                {stats.pendingApplications}
+              </div>
+              <p className="text-xs text-muted-foreground">Awaiting review</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Rejected</CardTitle>
               <XCircle className="h-4 w-4 text-red-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
+              <div className="text-2xl font-bold text-red-600">
                 {stats.rejectedApplications}
               </div>
               <p className="text-xs text-muted-foreground">Not selected</p>
@@ -520,8 +544,8 @@ export default function CompanyDashboardPage() {
                             position.status === "ACTIVE"
                               ? "outline"
                               : position.status === "PENDING"
-                                ? "secondary"
-                                : "destructive"
+                              ? "secondary"
+                              : "destructive"
                           }
                           className={
                             position.status === "ACTIVE"

@@ -7,6 +7,7 @@ const publicRoutes = [
   "/api/auth/register",
   "/auth/login",
   "/auth/register",
+  "/auth/verify",
 ];
 
 const authRoutes = ["/auth/login", "/auth/register"];
@@ -25,14 +26,19 @@ export async function middleware(request: NextRequest) {
 
   console.log("🚀 Middleware running:", pathname);
 
-  // ⭐ เพิ่ม await
   const user = await getAuthUser(request);
-  console.log("👤 User:", user ? `${user.email} (${user.role})` : "null");
+  console.log("userrrrr", user);
 
   // 1. Check public routes
   const isPublicRoute = publicRoutes.some(
     (route) => pathname === route || pathname.startsWith(route)
   );
+
+  if (user && user.emailVerified === false && pathname !== "/auth/verify") {
+    const verifyUrl = new URL("/auth/verify", request.url);
+    verifyUrl.searchParams.set("redirect", pathname);
+    return NextResponse.redirect(verifyUrl);
+  }
 
   if (isPublicRoute) {
     const isAuthRoute = authRoutes.some((route) => pathname === route);
@@ -93,13 +99,6 @@ export async function middleware(request: NextRequest) {
     }
 
     return NextResponse.next();
-  }
-
-  if (user?.verified === false) {
-    const verifyUrl = new URL("/auth/verify", request.url);
-    verifyUrl.searchParams.set("redirect", pathname);
-    console.log("🔒 Redirect to verify");
-    return NextResponse.redirect(verifyUrl);
   }
 
   // 4. Other routes

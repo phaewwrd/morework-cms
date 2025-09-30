@@ -14,6 +14,19 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    const hasCompany = await prisma.company.findFirst({
+      where: {
+        userId: user.userId,
+      },
+    });
+
+    if (!hasCompany) {
+      return NextResponse.json(
+        { success: false, message: "No company associated with this user" },
+        { status: 404 }
+      );
+    }
+
     // Check if user is a company user
     if (user.role !== "company") {
       return NextResponse.json(
