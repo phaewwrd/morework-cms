@@ -17,43 +17,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
+import { useCompanies } from "@/hooks/use-companies";
+import { useUpdatePosition } from "@/hooks/use-positions";
+import { useQueryClient } from "@tanstack/react-query";
 import AdminNavbar from "@/components/AdminNavbar";
 import { CircleChevronDown } from "lucide-react";
-import { Position } from "@/types";
+import { Position, Company } from "@/types";
 import Link from "next/link";
-
-interface Company {
-  id: number;
-  title: string;
-  address: string;
-  city: string;
-  country: string;
-  email: string;
-  contactName: string;
-  contactPhone: string;
-  userId: string;
-  user: {
-    id: string;
-    email: string;
-    createdAt: string;
-  };
-  positions: Array<{
-    id: number;
-    title: string;
-    status: "ACTIVE" | "CLOSED" | "PENDING";
-    applicantPositions: Array<{
-      id: number;
-      status: "PENDING" | "ACCEPTED" | "REJECTED";
-      appliedAt: string;
-      applicant: {
-        id: number;
-        firstName: string;
-        lastName: string;
-        email: string;
-      };
-    }>;
-  }>;
-}
 
 interface AdminStats {
   totalCompanies: number;
@@ -67,7 +37,10 @@ interface AdminStats {
 }
 
 export default function AdminCompaniesPage() {
-  const [companies, setCompanies] = useState<Company[]>([]);
+  const { data: companiesResponse, isLoading, error } = useCompanies();
+  const companies = companiesResponse?.data || [];
+  const updatePositionMutation = useUpdatePosition();
+  const queryClient = useQueryClient();
   const [stats, setStats] = useState<AdminStats>({
     totalCompanies: 0,
     totalPositions: 0,
@@ -78,49 +51,25 @@ export default function AdminCompaniesPage() {
     pendingApplications: 0,
     acceptedApplications: 0,
   });
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [positionStatusFilter, setPositionStatusFilter] = useState("");
   const [updatingPosition, setUpdatingPosition] = useState<number>();
   const [openApplicantsFor, setOpenApplicantsFor] = useState<number | null>(
     null
   );
+
   useEffect(() => {
-    fetchCompanies();
-  }, []);
-
-  const fetchCompanies = async () => {
-    try {
-      const response = await fetch("/api/companies");
-      const data = await response.json();
-
-      if (data.success) {
-        setCompanies(data.data);
-        calculateStats(data.data);
-      } else {
-        toast({
-          title: "Error",
-          description: data.message || "Failed to fetch companies",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to fetch companies",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
+    if (companies.length > 0) {
+      calculateStats(companies);
     }
-  };
+  }, [companies]);
 
   const calculateStats = (companiesData: Company[]) => {
     const stats = companiesData.reduce(
       (acc, company) => {
         acc.totalCompanies += 1;
 
-        company.positions.forEach((position) => {
+        company.positions?.forEach((position) => {
           acc.totalPositions += 1;
           if (position.status === "ACTIVE") {
             acc.activePositions += 1;
@@ -130,7 +79,7 @@ export default function AdminCompaniesPage() {
             acc.closedPositions += 1;
           }
 
-          position.applicantPositions.forEach((application) => {
+          position.applicantPositions?.forEach((application) => {
             acc.totalApplications += 1;
             if (application.status === "PENDING") {
               acc.pendingApplications += 1;
@@ -156,7 +105,7 @@ export default function AdminCompaniesPage() {
     setStats(stats);
   };
 
-  const filteredCompanies = companies.filter((company) => {
+  const filteredCompanies = companies.filter((company: Company) => {
     const matchesSearch =
       company.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       company.contactName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -168,7 +117,7 @@ export default function AdminCompaniesPage() {
     }
 
     // Check if company has any positions with the selected status
-    const hasMatchingPositions = company.positions.some(
+    const hasMatchingPositions = company.positions?.some(
       (position) => position.status === positionStatusFilter
     );
 
@@ -179,66 +128,27 @@ export default function AdminCompaniesPage() {
     positionId: number,
     newStatus: "ACTIVE" | "CLOSED" | "PENDING"
   ) => {
-    try {
-      setUpdatingPosition(positionId);
+    setUpdatingPosition(positionId);
 
-      const response = await fetch(`/api/positions/${positionId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
+    updatePositionMutation.mutate(
+      {
+        id: positionId,
+        data: { status: newStatus },
+      },
+      {
+        onSuccess: () => {
+          // Invalidate companies query to refetch data
+          queryClient.invalidateQueries({ queryKey: ["companies"] });
+          setUpdatingPosition(undefined);
         },
-        body: JSON.stringify({ status: newStatus }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        // Update the companies state
-        setCompanies((prev) =>
-          prev.map((company) => ({
-            ...company,
-            positions: company.positions.map((position) =>
-              position.id === positionId
-                ? { ...position, status: newStatus }
-                : position
-            ),
-          }))
-        );
-
-        // Recalculate stats
-        const updatedCompanies = companies.map((company) => ({
-          ...company,
-          positions: company.positions.map((position) =>
-            position.id === positionId
-              ? { ...position, status: newStatus }
-              : position
-          ),
-        }));
-        calculateStats(updatedCompanies);
-
-        toast({
-          title: "Success",
-          description: "Position status updated successfully",
-        });
-      } else {
-        toast({
-          title: "Error",
-          description: data.message || "Failed to update status",
-          variant: "destructive",
-        });
+        onError: () => {
+          setUpdatingPosition(undefined);
+        },
       }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update position status",
-        variant: "destructive",
-      });
-    } finally {
-      setUpdatingPosition(undefined);
-    }
+    );
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="container mx-auto p-6">
         <div className="flex items-center justify-center min-h-[400px]">
@@ -416,14 +326,17 @@ export default function AdminCompaniesPage() {
               </div>
             ) : (
               <div className="space-y-8">
-                {filteredCompanies.map((company) => {
-                  const totalApplications = company.positions.reduce(
-                    (sum, pos) => sum + pos.applicantPositions.length,
-                    0
-                  );
-                  const activePositions = company.positions.filter(
-                    (pos) => pos.status === "ACTIVE"
-                  ).length;
+                {filteredCompanies.map((company: Company) => {
+                  const totalApplications =
+                    company.positions?.reduce(
+                      (sum: number, pos: Position) =>
+                        sum + (pos.applicantPositions?.length || 0),
+                      0
+                    ) || 0;
+                  const activePositions =
+                    company.positions?.filter(
+                      (pos: Position) => pos.status === "ACTIVE"
+                    ).length || 0;
 
                   return (
                     <div
@@ -446,13 +359,13 @@ export default function AdminCompaniesPage() {
                               👤 {company.contactName} • 📞{" "}
                               {company.contactPhone}
                             </p>
-                            <p>🔗 User: {company.user.email}</p>
+                            <p>🔗 User: {company.email}</p>
                           </div>
                         </div>
                         <div className="flex flex-col gap-2 ml-6 text-center">
                           <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-medium">
-                            {company.positions.length} position
-                            {company.positions.length !== 1 ? "s" : ""}
+                            {company?.positions?.length} position
+                            {company?.positions?.length !== 1 ? "s" : ""}
                           </div>
                           <div className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-medium">
                             {activePositions} active
@@ -465,7 +378,7 @@ export default function AdminCompaniesPage() {
                       </div>
 
                       {/* Positions List */}
-                      {company.positions.length > 0 ? (
+                      {(company.positions?.length ?? 0) > 0 ? (
                         <div>
                           <div className="flex items-center justify-between mb-4">
                             <h3 className="font-medium text-gray-800">
@@ -476,7 +389,7 @@ export default function AdminCompaniesPage() {
                             </p>
                           </div>
                           <div className="space-y-4">
-                            {company.positions.map((position) => (
+                            {company?.positions?.map((position) => (
                               <div
                                 key={position.id}
                                 className="bg-gray-50 rounded-lg p-4"
@@ -548,13 +461,16 @@ export default function AdminCompaniesPage() {
                                           </SelectContent>
                                         </Select>
 
-                                        {position.applicantPositions.length >
-                                          0 && (
+                                        {(position?.applicantPositions
+                                          ?.length ?? 0) > 0 && (
                                           <div className="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs font-medium">
-                                            {position.applicantPositions.length}{" "}
+                                            {
+                                              position?.applicantPositions
+                                                ?.length
+                                            }{" "}
                                             applicant
-                                            {position.applicantPositions
-                                              .length > 1
+                                            {(position?.applicantPositions
+                                              ?.length ?? 0) > 1
                                               ? "s"
                                               : ""}
                                           </div>
@@ -575,10 +491,11 @@ export default function AdminCompaniesPage() {
 
                                 {/* Applications */}
                                 {openApplicantsFor === position.id &&
-                                  position.applicantPositions.length > 0 && (
+                                  (position?.applicantPositions?.length ?? 0) >
+                                    0 && (
                                     <div className="border-t border-gray-200 pt-3 mt-3">
                                       <div className="space-y-2">
-                                        {position.applicantPositions.map(
+                                        {position?.applicantPositions?.map(
                                           (application) => (
                                             <div
                                               key={application.id}
@@ -587,16 +504,19 @@ export default function AdminCompaniesPage() {
                                               <div>
                                                 <p className="font-medium text-sm">
                                                   {
-                                                    application.applicant
-                                                      .firstName
+                                                    application?.applicant
+                                                      ?.firstName
                                                   }{" "}
                                                   {
-                                                    application.applicant
-                                                      .lastName
+                                                    application?.applicant
+                                                      ?.lastName
                                                   }
                                                 </p>
                                                 <p className="text-xs text-muted-foreground">
-                                                  {application.applicant.email}{" "}
+                                                  {
+                                                    application?.applicant
+                                                      ?.email
+                                                  }{" "}
                                                   • Applied:{" "}
                                                   {new Date(
                                                     application.appliedAt

@@ -3,7 +3,7 @@ import { sendVerificationEmail } from "@/lib/email";
 import { generateToken, getAuthUser, getAuthUserAsync } from "@/lib/jwt";
 import { prisma } from "@/lib/prisma";
 import { randomUUID } from "crypto";
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
 
 // const resend = new Resend(process.env.RESEND_API_KEY);
@@ -47,9 +47,9 @@ export async function POST(request: NextRequest) {
 
     // return Response.json(data);
 
-    return Response.json({
+    return NextResponse.json({
       success: true,
-      message: "Verification email sent",
+      message: "Email sent successfully",
     });
   } catch (error) {
     console.log("route error2", error);

@@ -12,35 +12,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
+import { useApplicants } from "@/hooks/use-applicants";
+import { Applicant } from "@/types";
 import AdminNavbar from "@/components/AdminNavbar";
-
-interface Applicant {
-  id: number;
-  firstName: string;
-  lastName: string;
-  gender: string;
-  birthDate: string;
-  email: string;
-  phone: string;
-  address: string;
-  city: string;
-  country: string;
-  zipCode: string;
-  skills: string;
-  experience: number;
-  expectedSalary: number;
-  currentlyEmployed: boolean;
-  applicationStatus: "PENDING" | "ACCEPTED" | "REJECTED";
-  positions?: Array<{
-    id: number;
-    title: string;
-    status: "ACTIVE" | "PENDING" | "CLOSED";
-    applicationStatus: "PENDING" | "ACCEPTED" | "REJECTED";
-    company: {
-      title: string;
-    };
-  }>;
-}
 
 interface ApplicantStats {
   total: number;
@@ -51,48 +25,23 @@ interface ApplicantStats {
 
 export default function MoreWorksPage() {
   const router = useRouter();
-  const [applicants, setApplicants] = useState<Applicant[]>([]);
+  const { data: applicantsResponse, isLoading, error } = useApplicants();
+  const applicants = applicantsResponse?.data || [];
   const [stats, setStats] = useState<ApplicantStats>({
     total: 0,
     accepted: 0,
     pending: 0,
     rejected: 0,
   });
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [genderFilter, setGenderFilter] = useState("ALL");
   const [statusFilter, setStatusFilter] = useState("ALL");
 
   useEffect(() => {
-    fetchApplicants();
-  }, []);
-
-  const fetchApplicants = async () => {
-    try {
-      const response = await fetch("/api/applicants");
-      const data = await response.json();
-
-      if (data.success) {
-        setApplicants(data.data);
-        calculateStats(data.data);
-        console.log("data", data.data);
-      } else {
-        toast({
-          title: "Error",
-          description: data.message || "Failed to fetch applicants",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to fetch applicants",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
+    if (applicants.length > 0) {
+      calculateStats(applicants);
     }
-  };
+  }, [applicants]);
 
   const calculateStats = (applicantData: Applicant[]) => {
     const stats = { total: 0, accepted: 0, pending: 0, rejected: 0 };
@@ -101,7 +50,8 @@ export default function MoreWorksPage() {
       if (applicant.positions && applicant.positions.length > 0) {
         applicant.positions.forEach((position) => {
           stats.total += 1;
-          switch (position.applicationStatus) {
+          // Use applicationStatus instead of status (position status)
+          switch ((position as any).applicationStatus) {
             case "ACCEPTED":
               stats.accepted += 1;
               break;
@@ -119,10 +69,11 @@ export default function MoreWorksPage() {
     setStats(stats);
   };
 
-  const filteredApplicants = applicants.filter((applicant) => {
+  const filteredApplicants = applicants.filter((applicant: Applicant) => {
     const matchesSearch =
       applicant.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      applicant.lastName.toLowerCase().includes(searchTerm.toLowerCase());
+      applicant.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      applicant.email.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesGender =
       genderFilter === "ALL" || applicant.gender === genderFilter;
@@ -131,7 +82,7 @@ export default function MoreWorksPage() {
       statusFilter === "ALL" ||
       (applicant.positions &&
         applicant.positions.some(
-          (position) => position.applicationStatus === statusFilter
+          (position) => (position as any).applicationStatus === statusFilter
         ));
 
     return matchesSearch && matchesGender && matchesStatus;
@@ -141,7 +92,7 @@ export default function MoreWorksPage() {
     router.push(`/admin/moreworks/applicant/${applicantId}` as any);
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="container mx-auto p-6">
         <div className="flex items-center justify-center min-h-[400px]">
@@ -277,7 +228,7 @@ export default function MoreWorksPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                {filteredApplicants.map((applicant) => (
+                {filteredApplicants.map((applicant: Applicant) => (
                   <div
                     key={applicant.id}
                     className="flex items-center justify-between p-4 border rounded-lg"
@@ -297,41 +248,50 @@ export default function MoreWorksPage() {
                                 Applied Positions:
                               </p>
                               <div className="space-y-1">
-                                {applicant.positions.map((position) => (
-                                  <div
-                                    key={position.id}
-                                    className="flex items-center gap-2 flex-wrap"
-                                  >
-                                    <span className="text-xs">
-                                      {position.title}
-                                    </span>
-                                    <span className="text-xs text-muted-foreground">
-                                      at {position.company.title}
-                                    </span>
-                                    <Badge
-                                      variant={
-                                        position.applicationStatus ===
-                                        "ACCEPTED"
-                                          ? "default"
-                                          : position.applicationStatus ===
-                                            "PENDING"
-                                          ? "secondary"
-                                          : "destructive"
-                                      }
-                                      className={
-                                        position.applicationStatus ===
-                                        "ACCEPTED"
-                                          ? "bg-green-100 text-green-800 hover:bg-green-100"
-                                          : position.applicationStatus ===
-                                            "PENDING"
-                                          ? "bg-yellow-100 text-yellow-800 hover:bg-yellow-100"
-                                          : "bg-red-100 text-red-800 hover:bg-red-100"
-                                      }
+                                {applicant.positions?.map(
+                                  (applicantPosition) => (
+                                    <div
+                                      key={applicantPosition.id}
+                                      className="flex items-center gap-2 flex-wrap"
                                     >
-                                      {position.applicationStatus}
-                                    </Badge>
-                                  </div>
-                                ))}
+                                      <span className="text-xs">
+                                        {applicantPosition.position?.title}
+                                      </span>
+                                      <span className="text-xs text-muted-foreground">
+                                        at{" "}
+                                        {
+                                          applicantPosition.position?.company
+                                            ?.title
+                                        }
+                                      </span>
+                                      <Badge
+                                        variant={
+                                          (applicantPosition as any)
+                                            .applicationStatus === "ACCEPTED"
+                                            ? "default"
+                                            : (applicantPosition as any)
+                                                .applicationStatus === "PENDING"
+                                            ? "secondary"
+                                            : "destructive"
+                                        }
+                                        className={
+                                          (applicantPosition as any)
+                                            .applicationStatus === "ACCEPTED"
+                                            ? "bg-green-100 text-green-800 hover:bg-green-100"
+                                            : (applicantPosition as any)
+                                                .applicationStatus === "PENDING"
+                                            ? "bg-yellow-100 text-yellow-800 hover:bg-yellow-100"
+                                            : "bg-red-100 text-red-800 hover:bg-red-100"
+                                        }
+                                      >
+                                        {
+                                          (applicantPosition as any)
+                                            .applicationStatus
+                                        }
+                                      </Badge>
+                                    </div>
+                                  )
+                                )}
                               </div>
                             </div>
                           )}

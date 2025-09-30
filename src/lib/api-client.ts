@@ -2,11 +2,7 @@ import { type ApiResponse } from "@/lib/validations";
 
 // Custom error class for API errors
 export class ApiError extends Error {
-  constructor(
-    message: string,
-    public status: number,
-    public response?: any
-  ) {
+  constructor(message: string, public status: number, public response?: any) {
     super(message);
     this.name = "ApiError";
   }
@@ -38,14 +34,29 @@ class ApiClient {
 
     try {
       const response = await fetch(url, config);
-
       // Handle non-JSON responses
       const contentType = response.headers.get("content-type");
       if (!contentType?.includes("application/json")) {
+        // Try to get the response text for better error messages
+        let responseText = "";
+        try {
+          responseText = await response.text();
+        } catch (e) {
+          // Ignore if we can't read the response
+        }
+
+        // Log for debugging
+        console.error("Non-JSON response:", {
+          url,
+          status: response.status,
+          contentType,
+          responsePreview: responseText.substring(0, 200),
+        });
+
         throw new ApiError(
-          `Invalid response format: ${contentType}`,
+          `Invalid response format: ${contentType} (Status: ${response.status})`,
           response.status,
-          response
+          responseText
         );
       }
 
@@ -172,7 +183,7 @@ export const positionsApi = {
   create: (position: any) => apiClient.post("/positions", position),
 
   update: (id: number, position: any) =>
-    apiClient.put(`/positions/${id}`, position),
+    apiClient.patch(`/positions/${id}`, position),
 
   delete: (id: number) => apiClient.delete(`/positions/${id}`),
 };
@@ -225,4 +236,8 @@ export const usersApi = {
   update: (id: string, user: any) => apiClient.put(`/users/${id}`, user),
 
   delete: (id: string) => apiClient.delete(`/users/${id}`),
+};
+
+export const moreworkApi = {
+  getPositions: () => apiClient.get("/morework/positions"),
 };

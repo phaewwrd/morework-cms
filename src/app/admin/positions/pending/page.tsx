@@ -9,10 +9,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { toast } from "@/hooks/use-toast";
 import AdminNavbar from "@/components/AdminNavbar";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { useCompanies } from "@/hooks/use-companies";
+import { usePositions, useUpdatePositionStatus } from "@/hooks/use-positions";
+import { Position } from "@prisma/client";
+import { useMoreWorkPositions } from "@/hooks/use-morework";
 
 interface Company {
   id: number;
@@ -48,100 +51,43 @@ interface Company {
 }
 
 export default function PendingPositionsPage() {
-  const [companies, setCompanies] = useState<Company[]>([]);
+  const { data: companiesResponse, isLoading, error } = useCompanies();
+  const {
+    data: positionsData,
+    isLoading: positionsLoading,
+    error: positionsError,
+  } = useMoreWorkPositions();
+  const positions = positionsData?.data || [];
+  const companies = companiesResponse?.data || [];
   const [loading, setLoading] = useState(true);
+  const updateApplicantMutation = useUpdatePositionStatus();
+
   const [updatingPosition, setUpdatingPosition] = useState<number>();
-
-  useEffect(() => {
-    fetchCompanies();
-  }, []);
-
-  const fetchCompanies = async () => {
-    try {
-      const response = await fetch("/api/companies");
-      const data = await response.json();
-
-      if (data.success) {
-        setCompanies(data.data);
-      } else {
-        toast({
-          title: "Error",
-          description: data.message || "Failed to fetch companies",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to fetch companies",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const updatePositionStatus = async (
     positionId: number,
     newStatus: "ACTIVE" | "CLOSED" | "PENDING"
   ) => {
-    try {
-      setUpdatingPosition(positionId);
+    setUpdatingPosition(positionId);
 
-      const response = await fetch(`/api/positions/${positionId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ status: newStatus }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        // Update the companies state
-        setCompanies((prev) =>
-          prev.map((company) => ({
-            ...company,
-            positions: company.positions.map((position) =>
-              position.id === positionId
-                ? { ...position, status: newStatus }
-                : position
-            ),
-          }))
-        );
-
-        toast({
-          title: "Success",
-          description: "Position status updated successfully",
-        });
-      } else {
-        toast({
-          title: "Error",
-          description: data.message || "Failed to update status",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update position status",
-        variant: "destructive",
-      });
-    } finally {
-      setUpdatingPosition(undefined);
-    }
+    updateApplicantMutation.mutate({
+      id: positionId,
+      status: newStatus,
+    });
   };
 
   // Get all pending positions across all companies
-  const pendingPositions = companies.flatMap((company) =>
-    company.positions
-      .filter((pos) => pos.status === "PENDING")
-      .map((pos) => ({
-        ...pos,
-        company: { id: company.id, title: company.title },
-      }))
+  const pendingPositions = positions.flatMap((position: Position) =>
+    position.status === "PENDING"
+      ? [{ ...position, company: { id: position.id, title: position.title } }]
+      : []
   );
+
+  useEffect(() => {
+    if (!isLoading) {
+      setLoading(false);
+    }
+  }, [isLoading]);
 
   if (loading) {
     return (
@@ -191,7 +137,7 @@ export default function PendingPositionsPage() {
           <CardContent>
             {pendingPositions.length > 0 ? (
               <div className="space-y-4">
-                {pendingPositions.map((position) => (
+                {pendingPositions.map((position: Position) => (
                   <div
                     key={position.id}
                     className="border rounded-lg p-4 bg-yellow-50 border-yellow-200"
@@ -201,12 +147,18 @@ export default function PendingPositionsPage() {
                         <h4 className="font-semibold text-lg">
                           {position.title}
                         </h4>
-                        <p className="text-sm text-muted-foreground mb-2">
-                          {position.company.title}
+                        <p className="font-semibold text-md">
+                          {
+                            companies.find(
+                              (c: Company) => c.id === position.companyId
+                            )?.title
+                          }
                         </p>
+
                         <p className="text-sm text-muted-foreground mb-2">
                           {position.jobDescription}
                         </p>
+
                         <div className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs font-medium inline-block">
                           PENDING APPROVAL
                         </div>
@@ -236,11 +188,11 @@ export default function PendingPositionsPage() {
                         </Button>
                       </div>
                     </div>
-                    {position.applicantPositions.length > 0 && (
+                    {position?.applicantPositions?.length > 0 && (
                       <div className="mt-3 pt-3 border-t border-yellow-200">
                         <p className="text-sm text-gray-600">
-                          {position.applicantPositions.length} applicant
-                          {position.applicantPositions.length > 1
+                          {position?.applicantPositions?.length} applicant
+                          {position?.applicantPositions?.length > 1
                             ? "s"
                             : ""}{" "}
                           waiting
