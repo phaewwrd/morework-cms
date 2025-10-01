@@ -14,7 +14,6 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { useApplicants } from "@/hooks/use-applicants";
 import { Applicant } from "@/types";
-import AdminNavbar from "@/components/AdminNavbar";
 import { Filter, FilterX } from "lucide-react";
 
 interface ApplicantStats {
@@ -127,9 +126,7 @@ export default function MoreWorksPage() {
   }
 
   return (
-    <>
-      <AdminNavbar />
-      <div className="container mx-auto p-6">
+    <div className="container mx-auto p-6">
         <div className="mb-8">
           <h1 className="text-3xl font-bold tracking-tight">
             MoreWorks Dashboard
@@ -364,6 +361,5 @@ export default function MoreWorksPage() {
           </CardContent>
         </Card>
       </div>
-    </>
   );
 }

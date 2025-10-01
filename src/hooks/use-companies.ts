@@ -11,7 +11,7 @@ export function useCompanies(filters?: any) {
   return useQuery({
     queryKey: queryKeys.companies.list(filters || {}),
     queryFn: () => companiesApi.getAll(),
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 0, // 5 minutes
   });
 }
 
