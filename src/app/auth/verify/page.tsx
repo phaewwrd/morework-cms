@@ -19,12 +19,12 @@ export default function VerifyEmailPage() {
   const handleSendEmail = async () => {
     setSending(true);
     verifyEmail.mutate(undefined, {
-      // onSuccess: () => {
-      //   console.log("Send email success");
-      // },
-      // onError: (error) => {
-      //   console.log("Send email error", error);
-      // },
+      onSuccess: () => {
+        console.log("Send email success");
+      },
+      onError: (error) => {
+        console.log("Send email error", error);
+      },
     });
     setSending(false);
   };

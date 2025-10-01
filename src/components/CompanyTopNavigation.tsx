@@ -43,8 +43,8 @@ export default function CompanyTopNavigation({
         <div className=" grid grid-cols-3 gap-20 ">
           {/* Company Info */}
           <div className="flex items-center gap-3 flex-1">
-            <div className="p-2.5 bg-primary/90 rounded-xl shadow-sm">
-              <Briefcase className="h-5 w-5 text-white" />
+            <div className="p-2.5 ">
+              <Briefcase className="h-5 w-5 text-primary" />
             </div>
             <div className="flex-1">
               <h1 className="font-semibold text-base text-gray-900 truncate">
@@ -56,26 +56,28 @@ export default function CompanyTopNavigation({
 
           {/* Contact Info */}
           <div className="flex items-center gap-3 flex-1 pl-6 border-l border-gray-200">
-            <div className="p-2.5 bg-primary/90 rounded-xl shadow-sm">
-              <Phone className="h-5 w-5 text-white" />
+            <div className="p-2.5  ">
+              <Phone className="h-5 w-5 text-primary" />
             </div>
-            <div className="flex-1">
+            <div className="">
               <h2 className="font-semibold text-sm text-gray-900 mb-0.5">
                 ข้อมูลผู้ติดต่อ
               </h2>
-              <p className="text-xs text-gray-600 truncate">
-                {company?.contactName || "-"}
-              </p>
-              <p className="text-xs text-gray-500">
-                {company?.contactPhone || "-"}
-              </p>
+              <div>
+                <p className="text-xs text-gray-600 truncate">
+                  {company?.contactName || "-"}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {company?.contactPhone || "-"}
+                </p>
+              </div>
             </div>
           </div>
 
           {/* Address Info */}
           <div className="flex items-center gap-3 flex-1 pl-6 border-l border-gray-200">
-            <div className="p-2.5 bg-primary/90 rounded-xl shadow-sm">
-              <MapPinHouse className="h-5 w-5 text-white" />
+            <div className="p-2.5 ">
+              <MapPinHouse className="h-5 w-5 text-primary" />
             </div>
             <div className="flex-1">
               <h2 className="font-semibold text-sm text-gray-900 mb-0.5">

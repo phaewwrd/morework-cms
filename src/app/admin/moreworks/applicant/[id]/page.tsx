@@ -38,13 +38,37 @@ import {
   Trash2,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import AdminNavbar from "@/components/AdminNavbar";
 import {
   useApplicantDetail,
   useUpdateApplicant,
   type ApplicantDetail,
 } from "@/hooks/use-applicant-detail";
 import { useJobTypes, useUpdateApplicantJobTypes } from "@/hooks/use-job-types";
+
+interface Address {
+  id: number | null;
+  address: string;
+  districtId: number;
+  district: any | null;
+}
+
+interface Education {
+  id: number | null;
+  institution: string;
+  field: string;
+  graduationYear: number;
+  gpa: number;
+}
+
+interface WorkExperience {
+  id: number | null;
+  position: string;
+  company: string;
+  startDate: string | null;
+  endDate: string | null;
+  description: string;
+  currentPosition: boolean;
+}
 
 export default function ApplicantDetailPage() {
   const params = useParams();
@@ -59,9 +83,9 @@ export default function ApplicantDetailPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<Partial<ApplicantDetail>>({});
   const [selectedJobTypes, setSelectedJobTypes] = useState<number[]>([]);
-  const [addresses, setAddresses] = useState<any[]>([]);
-  const [educations, setEducations] = useState<any[]>([]);
-  const [workExperiences, setWorkExperiences] = useState<any[]>([]);
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [educations, setEducations] = useState<Education[]>([]);
+  const [workExperiences, setWorkExperiences] = useState<WorkExperience[]>([]);
   const [trainings, setTrainings] = useState<any[]>([]);
 
   // Initialize form data when applicant data loads
@@ -209,7 +233,6 @@ export default function ApplicantDetailPage() {
         })),
         educations: educations.map((edu) => ({
           id: edu.id,
-          educationlevelId: edu.educationlevelId,
           institution: edu.institution,
           field: edu.field,
           graduationYear: edu.graduationYear,
@@ -324,7 +347,6 @@ export default function ApplicantDetailPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <AdminNavbar />
         <div className="container mx-auto p-6">
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900 mx-auto"></div>
@@ -338,7 +360,6 @@ export default function ApplicantDetailPage() {
   if (error || !applicant) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <AdminNavbar />
         <div className="container mx-auto p-6">
           <div className="text-center py-12">
             <h2 className="text-2xl font-bold mb-4">Applicant Not Found</h2>
@@ -359,7 +380,6 @@ export default function ApplicantDetailPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <AdminNavbar />
       <div className="container mx-auto p-6">
         {/* Header */}
         <div className="mb-8">
@@ -786,25 +806,6 @@ export default function ApplicantDetailPage() {
                           </div>
                         </div>
                         <div className="grid grid-cols-3 gap-3">
-                          <div>
-                            <label className="text-sm font-medium text-gray-500">
-                              Education Level ID
-                            </label>
-                            <Input
-                              type="number"
-                              value={education.educationlevelId || 1}
-                              onChange={(e) =>
-                                updateEducation(
-                                  index,
-                                  "educationlevelId",
-                                  parseInt(e.target.value) || 1
-                                )
-                              }
-                              placeholder="Enter level ID"
-                              className="mt-1"
-                              min="1"
-                            />
-                          </div>
                           <div>
                             <label className="text-sm font-medium text-gray-500">
                               Graduation Year

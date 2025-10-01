@@ -21,7 +21,7 @@ export async function POST(
     const validatedData = userLoginSchema.parse(body);
 
     // Find user by email - use include to get all fields including password
-    const user = (await prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { email: validatedData.email },
       include: {
         companies: {
@@ -31,7 +31,7 @@ export async function POST(
           },
         },
       },
-    })) as any; // Type assertion to work around Prisma type issues
+    });
 
     if (!user) {
       return createErrorResponse(
