@@ -15,6 +15,7 @@ import { useCompanies } from "@/hooks/use-companies";
 import { usePositions, useUpdatePositionStatus } from "@/hooks/use-positions";
 import { Position } from "@prisma/client";
 import { useMoreWorkPositions } from "@/hooks/use-morework";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface Company {
   id: number;
@@ -64,12 +65,19 @@ interface ExtendedPosition extends Position {
 }
 
 export default function PendingPositionsPage() {
+  const queryClient = useQueryClient();
   const { data: companiesResponse, isLoading, error } = useCompanies();
   const {
     data: positionsData,
     isLoading: positionsLoading,
     error: positionsError,
-  } = useMoreWorkPositions();
+    refetch: refetchPositions,
+    isFetching: isRefetching,
+  } = useMoreWorkPositions({
+    refetchInterval: 30000, // Refetch every 30 seconds for real-time updates
+    refetchOnWindowFocus: true, // Refetch when window regains focus
+    refetchIntervalInBackground: true, // Continue refetching in background
+  });
   const positions = positionsData?.data || [];
   const companies = companiesResponse?.data || [];
   const [loading, setLoading] = useState(true);
@@ -83,10 +91,28 @@ export default function PendingPositionsPage() {
   ) => {
     setUpdatingPosition(positionId);
 
-    updateApplicantMutation.mutate({
-      id: positionId,
-      status: newStatus,
-    });
+    updateApplicantMutation.mutate(
+      {
+        id: positionId,
+        status: newStatus,
+      },
+      {
+        onSuccess: () => {
+          // Invalidate and refetch all relevant queries for real-time updates
+          queryClient.invalidateQueries({ queryKey: ['positions'] });
+          queryClient.invalidateQueries({ queryKey: ['companies'] });
+          queryClient.invalidateQueries({ queryKey: ['morework', 'positions'] });
+          
+          // Also refetch the current data
+          refetchPositions();
+          
+          setUpdatingPosition(undefined);
+        },
+        onError: () => {
+          setUpdatingPosition(undefined);
+        }
+      }
+    );
   };
 
   // Get all pending positions across all companies

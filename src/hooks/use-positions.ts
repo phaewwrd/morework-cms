@@ -90,15 +90,12 @@ export function useUpdatePositionStatus() {
       positionsApi.update(id, { status }),
 
     onSuccess: (data, variables) => {
-      // ✅ อัปเดต cache ของ position เดี่ยว
       queryClient.setQueryData(queryKeys.positions.detail(variables.id), data);
 
-      // ✅ รีเฟรชรายการ positions
       queryClient.invalidateQueries({
         queryKey: queryKeys.positions.lists(),
       });
 
-      // ✅ รีเฟรช companies (เพราะหน้า Pending ใช้ useCompanies)
       queryClient.invalidateQueries({
         queryKey: queryKeys.companies.lists(),
       });
