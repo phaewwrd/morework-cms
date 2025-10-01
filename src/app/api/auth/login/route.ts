@@ -74,6 +74,7 @@ export async function POST(
       email: user.email,
       role: user.role,
       emailVerified: user.emailVerified,
+      companyId: companyId,
     });
 
     const res = NextResponse.json({ success: true });

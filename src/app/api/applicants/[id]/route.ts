@@ -333,7 +333,6 @@ export async function PATCH(
     }
 
     const body = await req.json();
-    console.log(body);
 
     await upsertApplicantData(prisma, applicantId, body);
 

@@ -2,12 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
-import {
-  Briefcase,
-  LogOut,
-  Phone,
-  MapPinHouse,
-} from "lucide-react";
+import { Briefcase, LogOut, Phone, MapPinHouse } from "lucide-react";
 
 interface Company {
   id: number;
@@ -21,7 +16,9 @@ interface CompanyTopNavigationProps {
   company?: Company;
 }
 
-export default function CompanyTopNavigation({ company }: CompanyTopNavigationProps) {
+export default function CompanyTopNavigation({
+  company,
+}: CompanyTopNavigationProps) {
   const router = useRouter();
 
   const handleSignOut = async () => {
@@ -41,11 +38,11 @@ export default function CompanyTopNavigation({ company }: CompanyTopNavigationPr
   };
 
   return (
-    <div className="flex items-center justify-between mb-6 p-4 border-b">
+    <div className="flex items-center justify-between mb-6 p-4 border-b shadow-sm">
       <div className="flex items-center gap-4 w-full">
         <div className="flex items-center gap-2 w-full">
-          <div className="p-2 bg-primary/10 rounded-lg">
-            <Briefcase className="h-6 w-6 text-primary" />
+          <div className="p-2 bg-primary/90 rounded-lg">
+            <Briefcase className="h-6 w-6 text-white" />
           </div>
           <div>
             <h1 className="font-semibold text-lg">
@@ -55,19 +52,22 @@ export default function CompanyTopNavigation({ company }: CompanyTopNavigationPr
           </div>
         </div>
         <div className="flex items-center gap-2 w-full">
-          <div className="p-2 bg-primary/10 rounded-lg">
-            <Phone className="h-6 w-6 text-primary" />
+          <div className="p-2 bg-primary/90 rounded-lg">
+            <Phone className="h-6 w-6 text-white " />
           </div>
           <div>
-            <h1 className="font-semibold text-lg">เบอร์ติดต่อ</h1>
+            <h1 className="font-semibold text-lg">ข้อมูลผู้ติดต่อ</h1>
             <p className="text-sm text-muted-foreground">
-              {company?.contactName} {company?.contactPhone}
+              {company?.contactName || "-"}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {company?.contactPhone || "-"}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2 w-full">
-          <div className="p-2 bg-primary/10 rounded-lg">
-            <MapPinHouse className="h-6 w-6 text-primary" />
+          <div className="p-2 bg-primary/90 rounded-lg">
+            <MapPinHouse className="h-6 w-6 text-white" />
           </div>
           <div>
             <h1 className="font-semibold text-lg">ที่อยู่</h1>

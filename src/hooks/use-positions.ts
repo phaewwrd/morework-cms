@@ -8,7 +8,7 @@ export function usePositions(filters?: any) {
   return useQuery({
     queryKey: queryKeys.positions.list(filters || {}),
     queryFn: () => positionsApi.getAll(filters),
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 0,
   });
 }
 
@@ -17,7 +17,7 @@ export function usePosition(id: number, enabled = true) {
     queryKey: queryKeys.positions.detail(id),
     queryFn: () => positionsApi.getById(id),
     enabled: enabled && !!id,
-    staleTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 0,
   });
 }
 

@@ -9,7 +9,7 @@ export function useApplicants(filters?: any) {
   return useQuery({
     queryKey: queryKeys.applicants.list(filters || {}),
     queryFn: () => applicantsApi.getAll(filters),
-    staleTime: 3 * 60 * 1000, // 3 minutes - applicant data changes frequently
+    staleTime: 0,
   });
 }
 
@@ -175,11 +175,6 @@ export const upsertApplicantData = async (
   } else if (preferred_workplace) {
     applicantData.prefferedLocation = preferred_workplace;
   }
-  console.log(applicantData.startWorkingDate, "applicantData.startWorkingDate");
-  console.log(
-    applicantData.prefferedLocation,
-    "applicantData.prefferedLocation"
-  );
 
   if (applicantId) {
     applicant = await prisma.applicant.update({
@@ -382,16 +377,16 @@ export const upsertApplicantData = async (
     if (addressesToCreate.length > 0) {
       operations.push(
         ...addressesToCreate
-        .filter((addr) => addr.district_id)
-        .map((addr) =>
-          prisma.applicantAddress.create({
-            data: {
-              applicantId: applicant.id,
-              address: addr.address || "-",
-              districtId: addr.district_id || addr.districtId || 1,
-            },
-          })
-        )
+          .filter((addr) => addr.district_id)
+          .map((addr) =>
+            prisma.applicantAddress.create({
+              data: {
+                applicantId: applicant.id,
+                address: addr.address || "-",
+                districtId: addr.district_id || addr.districtId || 1,
+              },
+            })
+          )
       );
     }
 

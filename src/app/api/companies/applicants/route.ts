@@ -5,7 +5,6 @@ import { verifyToken as validateToken } from "@/lib/jwt";
 export async function GET(request: NextRequest) {
   try {
     // Get the authentication token from cookies
-    console.log("=== COMPANY APPLICANTS ROUTE START ===");
     const authToken = request.cookies.get("auth-token")?.value;
 
     if (!authToken) {

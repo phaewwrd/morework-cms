@@ -9,11 +9,8 @@ import { Resend } from "resend";
 // const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: NextRequest) {
-  console.log("🔥 API ROUTE HIT - /api/auth/send");
-
   try {
     const user = await getAuthUserAsync(request);
-    console.log("🔥 Auth user:", user);
 
     if (!user?.userId || !user?.email) {
       return NextResponse.json(
@@ -51,8 +48,6 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
-
-    console.log("🔥 Verification token created:", insertedToken);
 
     try {
       await sendVerificationEmail(user.email, verifyToken);
