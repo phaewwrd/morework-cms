@@ -27,14 +27,12 @@ import {
   Mail,
   Phone,
   Calendar,
-  Briefcase,
   Loader2,
   XCircle,
 } from "lucide-react";
 import { useCompanyApplicants, useUserCompany } from "@/hooks/use-companies";
 import { usePositions } from "@/hooks/use-positions";
 import { useUpdateApplicationStatus } from "@/hooks/use-applications";
-import CompanyTopNavigation from "@/components/CompanyTopNavigation";
 
 interface Applicant {
   id: number;
@@ -161,8 +159,6 @@ export default function AllApplicantsPage() {
 
   return (
     <div className="container mx-auto p-6 max-w-7xl">
-      <CompanyTopNavigation company={companyData} />
-
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-4 mb-4">
