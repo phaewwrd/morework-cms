@@ -48,7 +48,6 @@ export async function generateToken(
     .setExpirationTime("7d")
     .sign(secret);
 
-  console.log("🎫 Token generated");
   return token;
 }
 
@@ -59,16 +58,7 @@ export async function verifyToken(token: string): Promise<CustomJWTPayload> {
   try {
     const secret = getSecretKey();
 
-    console.log("=== TOKEN DEBUG ===");
-    console.log("Token:", token);
-    console.log("Token length:", token.length);
-    console.log("Token parts:", token.split(".").length);
-    console.log("First 50 chars:", token.substring(0, 50));
-    console.log("==================");
-
     const { payload } = await jwtVerify(token, secret);
-
-    console.log("✅ Token verified:", payload);
 
     return payload as unknown as CustomJWTPayload;
   } catch (error) {
@@ -88,8 +78,6 @@ export async function setAuthCookie(res: NextResponse, token: string) {
     maxAge: 7 * 24 * 60 * 60,
     path: "/",
   });
-
-  console.log("🍪 Cookie set");
 }
 
 /**
@@ -124,7 +112,6 @@ export async function getAuthUser(
 
     if (request) {
       token = request.cookies.get(COOKIE_NAME)?.value || null;
-      console.log("🍪 Token from request:", token ? "EXISTS" : "NULL");
     } else {
       throw new Error("Use getAuthUserAsync for API routes");
     }

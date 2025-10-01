@@ -147,7 +147,6 @@ export const authApi = {
   getMe: () => apiClient.get("/auth/me"),
 
   send: () => {
-    console.log("🔥 CALLING authApi.send (POST)");
     return apiClient.post("/auth/send");
   },
 

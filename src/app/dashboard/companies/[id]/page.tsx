@@ -33,7 +33,6 @@ import {
 import { useCompanyPositions, useUserCompany } from "@/hooks/use-companies";
 import { useUpdateApplicationStatus } from "@/hooks/use-applications";
 import { parseSecureId } from "@/lib/hash";
-import CompanyTopNavigation from "@/components/CompanyTopNavigation";
 
 interface Position {
   id: number;
@@ -200,9 +199,6 @@ export default function CompanyDashboardPage() {
 
   return (
     <div className="container mx-auto p-6 max-w-7xl">
-      {/* Top Navigation Bar */}
-      <CompanyTopNavigation company={userCompany} />
-
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between">
@@ -226,8 +222,8 @@ export default function CompanyDashboardPage() {
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-col-1 gap-3">
-        <h1>POSITIONS</h1>
+      <div className="grid grid-col-1 gap-3 border-2 p-4 mb-5 rounded-lg shadow-lg">
+        <h1 className="font-bold">POSITIONS</h1>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -283,7 +279,7 @@ export default function CompanyDashboardPage() {
           </Card>
         </div>
         <div></div>
-        <h1>APPLICANTS</h1>
+        <h1 className="font-bold">APPLICANTS</h1>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -339,7 +335,7 @@ export default function CompanyDashboardPage() {
         </div>
       </div>
       {/* Job Positions */}
-      <Card>
+      <Card className="shadow-lg">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
@@ -414,7 +410,7 @@ export default function CompanyDashboardPage() {
                             position.status === "ACTIVE"
                               ? "outline"
                               : position.status === "PENDING"
-                              ? "secondary"
+                              ? "default"
                               : "destructive"
                           }
                           className={

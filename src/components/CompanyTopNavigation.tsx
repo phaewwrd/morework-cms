@@ -2,12 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
-import {
-  Briefcase,
-  LogOut,
-  Phone,
-  MapPinHouse,
-} from "lucide-react";
+import { Briefcase, LogOut, Phone, MapPinHouse } from "lucide-react";
 
 interface Company {
   id: number;
@@ -21,7 +16,9 @@ interface CompanyTopNavigationProps {
   company?: Company;
 }
 
-export default function CompanyTopNavigation({ company }: CompanyTopNavigationProps) {
+export default function CompanyTopNavigation({
+  company,
+}: CompanyTopNavigationProps) {
   const router = useRouter();
 
   const handleSignOut = async () => {
@@ -41,50 +38,68 @@ export default function CompanyTopNavigation({ company }: CompanyTopNavigationPr
   };
 
   return (
-    <div className="flex items-center justify-between mb-6 p-4 border-b">
-      <div className="flex items-center gap-4 w-full">
-        <div className="flex items-center gap-2 w-full">
-          <div className="p-2 bg-primary/10 rounded-lg">
-            <Briefcase className="h-6 w-6 text-primary" />
+    <div className="border-b bg-gradient-to-r from-slate-50 to-slate-150 flex justify-center">
+      <div className="flex w-6/12 justify-between p-6">
+        <div className=" grid grid-cols-3 gap-20 ">
+          {/* Company Info */}
+          <div className="flex items-center gap-3 flex-1">
+            <div className="p-2.5 ">
+              <Briefcase className="h-5 w-5 text-primary" />
+            </div>
+            <div className="flex-1">
+              <h1 className="font-semibold text-base text-gray-900 truncate">
+                {company?.title || "Company"}
+              </h1>
+              <p className="text-xs text-gray-500 font-medium">Dashboard</p>
+            </div>
           </div>
-          <div>
-            <h1 className="font-semibold text-lg">
-              {company?.title || "Company"}
-            </h1>
-            <p className="text-sm text-muted-foreground">Dashboard</p>
+
+          {/* Contact Info */}
+          <div className="flex items-center gap-3 flex-1 pl-6 border-l border-gray-200">
+            <div className="p-2.5  ">
+              <Phone className="h-5 w-5 text-primary" />
+            </div>
+            <div className="">
+              <h2 className="font-semibold text-sm text-gray-900 mb-0.5">
+                ข้อมูลผู้ติดต่อ
+              </h2>
+              <div>
+                <p className="text-xs text-gray-600 truncate">
+                  {company?.contactName || "-"}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {company?.contactPhone || "-"}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Address Info */}
+          <div className="flex items-center gap-3 flex-1 pl-6 border-l border-gray-200">
+            <div className="p-2.5 ">
+              <MapPinHouse className="h-5 w-5 text-primary" />
+            </div>
+            <div className="flex-1">
+              <h2 className="font-semibold text-sm text-gray-900 mb-0.5">
+                ที่อยู่
+              </h2>
+              <p className="text-xs text-gray-600 line-clamp-2">
+                {company?.address || "-"}
+              </p>
+            </div>
           </div>
         </div>
-        <div className="flex items-center gap-2 w-full">
-          <div className="p-2 bg-primary/10 rounded-lg">
-            <Phone className="h-6 w-6 text-primary" />
-          </div>
-          <div>
-            <h1 className="font-semibold text-lg">เบอร์ติดต่อ</h1>
-            <p className="text-sm text-muted-foreground">
-              {company?.contactName} {company?.contactPhone}
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2 w-full">
-          <div className="p-2 bg-primary/10 rounded-lg">
-            <MapPinHouse className="h-6 w-6 text-primary" />
-          </div>
-          <div>
-            <h1 className="font-semibold text-lg">ที่อยู่</h1>
-            <p className="text-sm text-muted-foreground">
-              {company?.address || "-"}
-            </p>
-          </div>
-        </div>
+
+        {/* Sign Out Button */}
+        <Button
+          variant="outline"
+          onClick={handleSignOut}
+          className="flex items-center gap-2 ml-6 border-gray-300 hover:bg-red-50 hover:border-red-300 hover:text-red-600 transition-colors shadow-sm flex-shrink-0"
+        >
+          <LogOut className="h-4 w-4" />
+          <span className="font-medium">Sign Out</span>
+        </Button>
       </div>
-      <Button
-        variant="outline"
-        onClick={handleSignOut}
-        className="flex items-center gap-2"
-      >
-        <LogOut className="h-4 w-4" />
-        Sign Out
-      </Button>
     </div>
   );
 }

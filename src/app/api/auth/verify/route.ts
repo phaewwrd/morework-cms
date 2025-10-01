@@ -4,7 +4,6 @@ import { generateToken, setAuthCookie, verifyToken } from "@/lib/jwt";
 import { NextResponse } from "next/server";
 
 export async function GET(req: Request) {
-  console.log("🔥 API ROUTE HIT - /api/auth/verify");
   const { searchParams } = new URL(req.url);
   const token = searchParams.get("token");
   if (!token) return new Response("Missing token", { status: 400 });

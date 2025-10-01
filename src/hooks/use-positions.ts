@@ -8,7 +8,7 @@ export function usePositions(filters?: any) {
   return useQuery({
     queryKey: queryKeys.positions.list(filters || {}),
     queryFn: () => positionsApi.getAll(filters),
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 0,
   });
 }
 
@@ -17,7 +17,7 @@ export function usePosition(id: number, enabled = true) {
     queryKey: queryKeys.positions.detail(id),
     queryFn: () => positionsApi.getById(id),
     enabled: enabled && !!id,
-    staleTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 0,
   });
 }
 
@@ -90,15 +90,12 @@ export function useUpdatePositionStatus() {
       positionsApi.update(id, { status }),
 
     onSuccess: (data, variables) => {
-      // ✅ อัปเดต cache ของ position เดี่ยว
       queryClient.setQueryData(queryKeys.positions.detail(variables.id), data);
 
-      // ✅ รีเฟรชรายการ positions
       queryClient.invalidateQueries({
         queryKey: queryKeys.positions.lists(),
       });
 
-      // ✅ รีเฟรช companies (เพราะหน้า Pending ใช้ useCompanies)
       queryClient.invalidateQueries({
         queryKey: queryKeys.companies.lists(),
       });

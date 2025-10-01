@@ -17,7 +17,6 @@ export default function VerifyEmailPage() {
   const [sending, setSending] = useState<boolean>(false);
 
   const handleSendEmail = async () => {
-    console.log("");
     setSending(true);
     verifyEmail.mutate(undefined, {
       onSuccess: () => {

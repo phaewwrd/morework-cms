@@ -14,7 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { useApplicants } from "@/hooks/use-applicants";
 import { Applicant } from "@/types";
-import AdminNavbar from "@/components/AdminNavbar";
+import { Filter, FilterX } from "lucide-react";
 
 interface ApplicantStats {
   total: number;
@@ -52,14 +52,15 @@ export default function MoreWorksPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [genderFilter, setGenderFilter] = useState("ALL");
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [showOnlyWithPositions, setShowOnlyWithPositions] = useState(false);
 
   useEffect(() => {
     if (applicants.length > 0) {
-      console.log("Applicants data:", applicants[0]?.positions?.[0]); // Debug log
       calculateStats(applicants);
     }
   }, [applicants]);
 
+  console.log(applicants);
   const calculateStats = (applicantData: ExtendedApplicant[]) => {
     const stats = { total: 0, accepted: 0, pending: 0, rejected: 0 };
 
@@ -67,7 +68,6 @@ export default function MoreWorksPage() {
       if (applicant.positions && applicant.positions.length > 0) {
         applicant.positions.forEach((position) => {
           stats.total += 1;
-          // Use applicationStatus instead of status (position status)
           switch (position.applicationStatus) {
             case "ACCEPTED":
               stats.accepted += 1;
@@ -103,7 +103,11 @@ export default function MoreWorksPage() {
             (position) => position.applicationStatus === statusFilter
           ));
 
-      return matchesSearch && matchesGender && matchesStatus;
+      const hasPositions = showOnlyWithPositions
+        ? applicant.positions && applicant.positions.length > 0
+        : true;
+
+      return matchesSearch && matchesGender && matchesStatus && hasPositions;
     }
   );
 
@@ -121,11 +125,8 @@ export default function MoreWorksPage() {
     );
   }
 
-  console.log(applicants, "applicants data");
   return (
-    <>
-      <AdminNavbar />
-      <div className="container mx-auto p-6">
+    <div className="container mx-auto p-6">
         <div className="mb-8">
           <h1 className="text-3xl font-bold tracking-tight">
             MoreWorks Dashboard
@@ -180,7 +181,27 @@ export default function MoreWorksPage() {
         {/* Filters */}
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle>Filters</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle>Filters</CardTitle>
+              <Button
+                variant={showOnlyWithPositions ? "default" : "outline"}
+                size="sm"
+                onClick={() => setShowOnlyWithPositions(!showOnlyWithPositions)}
+                className="flex items-center gap-2"
+              >
+                {showOnlyWithPositions ? (
+                  <>
+                    <FilterX className="h-4 w-4" />
+                    Show All Workers
+                  </>
+                ) : (
+                  <>
+                    <Filter className="h-4 w-4" />
+                    Only With Applications
+                  </>
+                )}
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 md:grid-cols-3">
@@ -236,9 +257,18 @@ export default function MoreWorksPage() {
         {/* Applicants List */}
         <Card>
           <CardHeader>
-            <CardTitle>Applicants ({filteredApplicants.length})</CardTitle>
+            <CardTitle>
+              Workers ({filteredApplicants.length})
+              {showOnlyWithPositions && (
+                <span className="text-sm font-normal text-muted-foreground ml-2">
+                  - With Applications Only
+                </span>
+              )}
+            </CardTitle>
             <CardDescription>
               Manage applicant applications and statuses
+              {showOnlyWithPositions &&
+                ` • Showing applicants with job applications only`}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -331,6 +361,5 @@ export default function MoreWorksPage() {
           </CardContent>
         </Card>
       </div>
-    </>
   );
 }

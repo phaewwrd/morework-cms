@@ -1,8 +1,8 @@
-'use client'
+"use client";
 
-import React from 'react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
+import React from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -13,14 +13,14 @@ const queryClient = new QueryClient({
       gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
       retry: (failureCount, error) => {
         // Don't retry on 401/403 errors (authentication/authorization)
-        if (error instanceof Error && 'status' in error) {
-          const status = (error as any).status
+        if (error instanceof Error && "status" in error) {
+          const status = (error as any).status;
           if (status === 401 || status === 403) {
-            return false
+            return false;
           }
         }
         // Retry up to 3 times for other errors
-        return failureCount < 3
+        return failureCount < 3;
       },
       refetchOnWindowFocus: false, // Disable refetch on window focus by default
       refetchOnMount: true,
@@ -30,21 +30,21 @@ const queryClient = new QueryClient({
       // Global defaults for mutations
       retry: (failureCount, error) => {
         // Don't retry mutations on client errors (4xx)
-        if (error instanceof Error && 'status' in error) {
-          const status = (error as any).status
+        if (error instanceof Error && "status" in error) {
+          const status = (error as any).status;
           if (status >= 400 && status < 500) {
-            return false
+            return false;
           }
         }
         // Retry up to 2 times for server errors
-        return failureCount < 2
+        return failureCount < 2;
       },
     },
   },
-})
+});
 
 interface ProvidersProps {
-  children: React.ReactNode
+  children: React.ReactNode;
 }
 
 export function Providers({ children }: ProvidersProps) {
@@ -53,5 +53,5 @@ export function Providers({ children }: ProvidersProps) {
       {children}
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
-  )
+  );
 }

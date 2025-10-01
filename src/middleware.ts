@@ -35,7 +35,6 @@ export async function middleware(request: NextRequest) {
     if (isAuthRoute && user) {
       const redirectUrl =
         user.role === "admin" ? "/admin/moreworks" : "/dashboard/companies";
-      console.log("↩️  Redirect to:", redirectUrl);
       return NextResponse.redirect(new URL(redirectUrl, request.url));
     }
 

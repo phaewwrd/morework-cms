@@ -99,8 +99,6 @@ export function useVerifyEmail() {
       });
     },
     onError: (error: any) => {
-      console.log("Send email error hook", error);
-
       toast({
         title: "Error",
         description: error.message || "Send email failed",
